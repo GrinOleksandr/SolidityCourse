@@ -1,4 +1,4 @@
-//https://rinkeby.etherscan.io/address/0xCC911935F295F1C9032F3401e45fc6C382db370c#code
+//deployed at https://rinkeby.etherscan.io/address/0x131b42EF309359beD33E60434AD2C32555f9A4aB#code
 
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
@@ -39,10 +39,9 @@ int  latestPrice = getLatestPrice()/100000000;
 uint256 tokenPrice = uint256(latestPrice) / studentsAmount;
 uint256  amountOfTokensToBuy = msg.value/tokenPrice;
 
-
-
 if(IERC20(tokenContract).balanceOf(address(this)) < amountOfTokensToBuy){
 (bool sent, bytes memory data) = msg.sender.call{value:msg.value}("Sorry, there is not enough tokens");
+    return;
 }
 
 IERC20(tokenContract).transfer(msg.sender, amountOfTokensToBuy);
