@@ -13,6 +13,7 @@ interface IERC20 {
         address recipient,
         uint256 amount
     ) external returns (bool);
+    function allowance(address owner, address spender) external view returns (uint256);
     function transfer(address recipient, uint256 amount) external returns (bool);
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
@@ -23,8 +24,9 @@ interface studentsInterface {
 }
 
 contract Vendor {
-    address public tokenContract;
+    address internal myTokenContractAddress;
     address studentsContractAddress = 0x0E822C71e628b20a35F8bCAbe8c11F274246e64D;
+    address DAIContractAddress = 0x5592EC0cfb4dbc12D3aB100b257153436a1f0FEa;
     AggregatorV3Interface internal priceFeed;
     address owner;
 
@@ -35,21 +37,42 @@ contract Vendor {
 
     function setTokenContractAddress (address tokenContractAddress) public {
         require(msg.sender == owner);
-        tokenContract = tokenContractAddress;
+        myTokenContractAddress = tokenContractAddress;
     }
 
     function buyTokens() public payable {
-        uint256  studentsAmount = getStudentsAmount();
-        int  latestPrice = getLatestPrice()/100000000;
-        uint256 tokenPrice = uint256(latestPrice) / studentsAmount;
+        uint256 tokenPrice = getPriceOfToken();
         uint256  amountOfTokensToBuy = msg.value/tokenPrice;
+        IERC20 myTokenContract = IERC20(myTokenContractAddress);
 
-        if(IERC20(tokenContract).balanceOf(address(this)) < amountOfTokensToBuy){
+        if(myTokenContract.balanceOf(address(this)) < amountOfTokensToBuy){
             (bool sent, bytes memory data) = msg.sender.call{value:msg.value}("Sorry, there is not enough tokens");
             return;
         }
 
-        IERC20(tokenContract).transfer(msg.sender, amountOfTokensToBuy);
+        myTokenContract.transfer(msg.sender, amountOfTokensToBuy);
+    }
+
+    function getPriceOfToken() internal returns(uint256) {
+        uint256  studentsAmount = getStudentsAmount();
+        int  latestPrice = getLatestPrice()/100000000;
+        return uint256(latestPrice) / studentsAmount;
+    }
+
+    function buyTokensForDAI(uint256 amount) public {
+        require(amount > 0, "You need to have at least some tokens");
+        IERC20 DAITokenContract = IERC20(DAIContractAddress);
+        IERC20 myTokenContract = IERC20(myTokenContractAddress);
+        uint256 tokenPrice = getPriceOfToken();
+        uint256  amountOfTokensToBuy = amount/tokenPrice;
+
+        uint256 allowance = DAITokenContract.allowance(msg.sender, address(this));
+        require(allowance >= amountOfTokensToBuy, "Check the token allowance");
+
+        if(myTokenContract.balanceOf(address(this)) > amountOfTokensToBuy){
+            DAITokenContract.transferFrom(msg.sender, address(this), amount);
+            myTokenContract.transfer(msg.sender, amountOfTokensToBuy);
+        }
     }
 
     function getLatestPrice() public view returns (int) {
