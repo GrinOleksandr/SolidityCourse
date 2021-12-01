@@ -1,7 +1,7 @@
 //deployed at https://rinkeby.etherscan.io/address/0x131b42EF309359beD33E60434AD2C32555f9A4aB#code
 
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.10;
 
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 

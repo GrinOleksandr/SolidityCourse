@@ -1,6 +1,6 @@
 //deployed at https://rinkeby.etherscan.io/address/0x18DAF3C01573B827A067BFd02349B0d5588242aB
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.10;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
