@@ -1,4 +1,4 @@
-//deployed at https://rinkeby.etherscan.io/address/0x131b42EF309359beD33E60434AD2C32555f9A4aB#code
+//deployed at https://rinkeby.etherscan.io/address/0xB99e431Ca68d69be12a10836f3c10535C0317631#code
 
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
@@ -15,6 +15,7 @@ interface IERC20 {
     ) external returns (bool);
     function allowance(address owner, address spender) external view returns (uint256);
     function transfer(address recipient, uint256 amount) external returns (bool);
+    function approve(address spender, uint256 amount) external returns (bool);
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
 }
@@ -23,12 +24,18 @@ interface studentsInterface {
     function getStudentsList() external view returns (string[] memory studentsList);
 }
 
+
 contract Vendor {
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+
     address internal myTokenContractAddress;
     address studentsContractAddress = 0x0E822C71e628b20a35F8bCAbe8c11F274246e64D;
     address DAIContractAddress = 0x5592EC0cfb4dbc12D3aB100b257153436a1f0FEa;
     AggregatorV3Interface internal priceFeed;
     address owner;
+    IERC20 DAITokenContract = IERC20(DAIContractAddress);
+    IERC20 myTokenContract = IERC20(myTokenContractAddress);
 
     constructor() {
         owner = msg.sender;
@@ -38,19 +45,25 @@ contract Vendor {
     function setTokenContractAddress (address tokenContractAddress) public {
         require(msg.sender == owner);
         myTokenContractAddress = tokenContractAddress;
+        DAITokenContract = IERC20(DAIContractAddress);
+        myTokenContract = IERC20(myTokenContractAddress);
     }
 
     function buyTokens() public payable {
         uint256 tokenPrice = getPriceOfToken();
         uint256  amountOfTokensToBuy = msg.value/tokenPrice;
-        IERC20 myTokenContract = IERC20(myTokenContractAddress);
 
         if(myTokenContract.balanceOf(address(this)) < amountOfTokensToBuy){
             (bool sent, bytes memory data) = msg.sender.call{value:msg.value}("Sorry, there is not enough tokens");
             return;
         }
 
-        myTokenContract.transfer(msg.sender, amountOfTokensToBuy);
+        _transferMyTokens(msg.sender, amountOfTokensToBuy);
+    }
+
+    function getApproval(uint256 amount) public {
+        DAITokenContract.approve(address(this), amount);
+        emit Approval(msg.sender, address(this), amount);
     }
 
     function getPriceOfToken() internal returns(uint256) {
@@ -61,9 +74,8 @@ contract Vendor {
 
     function buyTokensForDAI(uint256 amount) public {
         require(amount > 0, "You need to have at least some tokens");
-        IERC20 DAITokenContract = IERC20(DAIContractAddress);
-        IERC20 myTokenContract = IERC20(myTokenContractAddress);
-        uint256 tokenPrice = getPriceOfToken();
+
+        uint256 tokenPrice = 1;
         uint256  amountOfTokensToBuy = amount/tokenPrice;
 
         uint256 allowance = DAITokenContract.allowance(msg.sender, address(this));
@@ -71,8 +83,9 @@ contract Vendor {
 
         if(myTokenContract.balanceOf(address(this)) > amountOfTokensToBuy){
             DAITokenContract.transferFrom(msg.sender, address(this), amount);
-            myTokenContract.transfer(msg.sender, amountOfTokensToBuy);
+            _transferMyTokens(msg.sender, amountOfTokensToBuy);
         }
+        return;
     }
 
     function getLatestPrice() public view returns (int) {
@@ -89,5 +102,10 @@ contract Vendor {
     function getStudentsAmount() public view returns(uint256) {
         string[] memory studentsList = studentsInterface(studentsContractAddress).getStudentsList();
         return studentsList.length;
+    }
+
+    function _transferMyTokens(address recipient, uint256 amount) internal {
+        myTokenContract.transfer(recipient, amount);
+        emit Transfer(myTokenContractAddress, recipient, amount);
     }
 }
