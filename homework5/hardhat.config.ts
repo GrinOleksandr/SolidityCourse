@@ -34,7 +34,7 @@ module.exports = {
   networks: {
     hardhat: {
       forking: {
-        url: `https://mainnet.infura.io/v3/${INFURA_KEY}`,
+        url: `https://rinkeby.infura.io/v3/${INFURA_KEY}`,
         accounts: accountsTestnet
       }
     },

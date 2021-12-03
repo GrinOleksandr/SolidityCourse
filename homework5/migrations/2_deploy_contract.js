@@ -1,12 +1,6 @@
-const TestToken = artifacts.require("TestToken");
+// const TestToken = artifacts.require("TestToken");
 const Vendor = artifacts.require("Vendor");
 
 module.exports =async function (deployer) {
-
-   await deployer.deploy(Vendor);
-   const vendorInstance = await Vendor.deployed();
-
-   await deployer.deploy(TestToken, vendorInstance.address, 1000000);
-   const testTokenInstance = await TestToken.deployed();
-   await vendorInstance.setTokenContractAddress(testTokenInstance.address);
+   await deployer.deploy(Vendor,'0x58F56eFb1Bc4D0c566c493E019EE7dDcc987f720');
 };
