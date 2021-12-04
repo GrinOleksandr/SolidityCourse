@@ -28,16 +28,13 @@ interface studentsInterface {
 contract Vendor {
     address internal myTokenContractAddress;
     address studentsContractAddress = 0x0E822C71e628b20a35F8bCAbe8c11F274246e64D;
-    address DAIContractAddress = 0x5592EC0cfb4dbc12D3aB100b257153436a1f0FEa;
+    address DAIContractAddress;
     AggregatorV3Interface internal priceFeed;
     address owner;
     IERC20 DAITokenContract = IERC20(DAIContractAddress);
     IERC20 myTokenContract = IERC20(myTokenContractAddress);
 
-    uint256 public _tokenPrice;
-    uint256 public _tokensAmountToBuy;
-
-    constructor(address tokenContractAddress) {
+    constructor(address tokenContractAddress, address DAIContractAddress) {
         owner = msg.sender;
         priceFeed = AggregatorV3Interface(0x8A753747A1Fa494EC906cE90E9f37563A8AF630e);
         myTokenContractAddress = tokenContractAddress;
@@ -49,9 +46,7 @@ contract Vendor {
         uint256  studentsAmount = getStudentsAmount();
         int  latestPrice = getLatestPrice()/100000000;
         uint256 tokenPrice = uint256(latestPrice) / studentsAmount;
-        _tokenPrice = tokenPrice;
         uint256  amountOfTokensToBuy = msg.value/tokenPrice;
-        _tokensAmountToBuy = amountOfTokensToBuy;
 
         if(myTokenContract.balanceOf(address(this)) < amountOfTokensToBuy){
             (bool sent,) = msg.sender.call{value:msg.value}("Sorry, there is not enough tokens");
@@ -64,8 +59,10 @@ contract Vendor {
     function buyTokensForDAI(uint256 amount) public {
         require(amount > 0, "Maybe you would like to buy something greater than 0?");
         uint256  amountOfTokensToBuy = amount;
-        require(myTokenContract.balanceOf(address(this)) < amountOfTokensToBuy, "Sorry, there is not enough tokens on my balance");
-        require(DAITokenContract.balanceOf(msg.sender) < amountOfTokensToBuy, "Sorry, you do not have enough DAI-tokens for swap");
+
+        require(DAITokenContract.balanceOf(msg.sender) >= amount, "Sorry, you do not have enough DAI-tokens for swap");
+        require(myTokenContract.balanceOf(address(this)) >= amountOfTokensToBuy, "Sorry, there is not enough tokens on my balance");
+
 
         uint256 allowance = DAITokenContract.allowance(msg.sender, address(this));
         require(allowance >= amountOfTokensToBuy, "Check the token allowance");
