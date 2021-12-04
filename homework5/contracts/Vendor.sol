@@ -65,7 +65,7 @@ contract Vendor {
 
 
         uint256 allowance = DAITokenContract.allowance(msg.sender, address(this));
-        require(allowance >= amountOfTokensToBuy, "Check the token allowance");
+        require(allowance >= amountOfTokensToBuy, "Check the token allowance please");
 
         DAITokenContract.transferFrom(msg.sender, address(this), amount);
         myTokenContract.transfer(msg.sender, amountOfTokensToBuy);
