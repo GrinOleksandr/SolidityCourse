@@ -1,4 +1,4 @@
-//deployed at https://rinkeby.etherscan.io/address/0x1Eda90C3f62eE217aF9775E3DE9B5634ecCF30F4
+//example deployed at  https://rinkeby.etherscan.io/address/0xfDB2A4608ea1F422aD66D3211A28d50aA219126c#code
 
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
@@ -26,25 +26,22 @@ interface studentsInterface {
 
 
 contract Vendor {
-    address internal myTokenContractAddress;
     address studentsContractAddress = 0x0E822C71e628b20a35F8bCAbe8c11F274246e64D;
-    address DAIContractAddress;
-    AggregatorV3Interface internal priceFeed;
+    address aggregatorAddressFor_ETH_USD = 0x8A753747A1Fa494EC906cE90E9f37563A8AF630e;
+    address aggregatorAddressFor_DAI_USD = 0x2bA49Aaa16E6afD2a993473cfB70Fa8559B523cF;
     address owner;
-    IERC20 DAITokenContract = IERC20(DAIContractAddress);
-    IERC20 myTokenContract = IERC20(myTokenContractAddress);
+    IERC20 DAITokenContract;
+    IERC20 myTokenContract;
 
-    constructor(address tokenContractAddress, address DAIContractAddress) {
+    constructor(address tokenContractAddress, address DAITokenContractAddress) {
         owner = msg.sender;
-        priceFeed = AggregatorV3Interface(0x8A753747A1Fa494EC906cE90E9f37563A8AF630e);
-        myTokenContractAddress = tokenContractAddress;
-        DAITokenContract = IERC20(DAIContractAddress);
-        myTokenContract = IERC20(myTokenContractAddress);
+        DAITokenContract = IERC20(DAITokenContractAddress);
+        myTokenContract = IERC20(tokenContractAddress);
     }
 
     function buyTokens() public payable {
         uint256  studentsAmount = getStudentsAmount();
-        int  latestPrice = getLatestPrice()/100000000;
+        int  latestPrice = getLatestPrice(aggregatorAddressFor_ETH_USD)/100000000;
         uint256 tokenPrice = uint256(latestPrice) / studentsAmount;
         uint256  amountOfTokensToBuy = msg.value/tokenPrice;
 
@@ -56,26 +53,26 @@ contract Vendor {
         myTokenContract.transfer(msg.sender, amountOfTokensToBuy);
     }
 
-    function buyTokensForDAI(uint256 amount) public {
-        require(amount > 0, "Maybe you would like to buy something greater than 0?");
-        uint256  amountOfTokensToBuy = amount;
+    function buyTokensForDAI(uint256 amountToBuy) public {
+        require(amountToBuy > 0, "Maybe you would like to buy something greater than 0?");
+        int  latestPrice = getLatestPrice(aggregatorAddressFor_DAI_USD)/100000000;
+        uint256  amountOfDAITokensToPay = amountToBuy/uint256(latestPrice);
 
-        require(DAITokenContract.balanceOf(msg.sender) >= amount, "Sorry, you do not have enough DAI-tokens for swap");
-        require(myTokenContract.balanceOf(address(this)) >= amountOfTokensToBuy, "Sorry, there is not enough tokens on my balance");
-
+        require(DAITokenContract.balanceOf(msg.sender) >= amountOfDAITokensToPay, "Sorry, you do not have enough DAI-tokens for swap");
+        require(myTokenContract.balanceOf(address(this)) >= amountToBuy, "Sorry, there is not enough tokens on my balance");
 
         uint256 allowance = DAITokenContract.allowance(msg.sender, address(this));
-        require(allowance >= amountOfTokensToBuy, "Check the token allowance please");
+        require(allowance >= amountToBuy, "Check the token allowance please");
 
-        DAITokenContract.transferFrom(msg.sender, address(this), amount);
-        myTokenContract.transfer(msg.sender, amountOfTokensToBuy);
+        DAITokenContract.transferFrom(msg.sender, address(this), amountToBuy);
+        myTokenContract.transfer(msg.sender, amountToBuy);
 
         return;
     }
 
-    function getLatestPrice() public view returns (int) {
-        (,int price,,,) = priceFeed.latestRoundData();
-        return price;
+    function getLatestPrice(address aggregatorAddress) internal returns (int256) {
+            (,int price,,,) = AggregatorV3Interface(aggregatorAddress).latestRoundData();
+            return int256(price);
     }
 
     function getStudentsAmount() internal view returns(uint256) {
