@@ -1,4 +1,4 @@
-//deployed at
+//deployed at https://rinkeby.etherscan.io/address/0x1Eda90C3f62eE217aF9775E3DE9B5634ecCF30F4
 
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
@@ -34,6 +34,9 @@ contract Vendor {
     IERC20 DAITokenContract = IERC20(DAIContractAddress);
     IERC20 myTokenContract = IERC20(myTokenContractAddress);
 
+    uint256 public _tokenPrice;
+    uint256 public _tokensAmountToBuy;
+
     constructor(address tokenContractAddress) {
         owner = msg.sender;
         priceFeed = AggregatorV3Interface(0x8A753747A1Fa494EC906cE90E9f37563A8AF630e);
@@ -46,7 +49,9 @@ contract Vendor {
         uint256  studentsAmount = getStudentsAmount();
         int  latestPrice = getLatestPrice()/100000000;
         uint256 tokenPrice = uint256(latestPrice) / studentsAmount;
+        _tokenPrice = tokenPrice;
         uint256  amountOfTokensToBuy = msg.value/tokenPrice;
+        _tokensAmountToBuy = amountOfTokensToBuy;
 
         if(myTokenContract.balanceOf(address(this)) < amountOfTokensToBuy){
             (bool sent,) = msg.sender.call{value:msg.value}("Sorry, there is not enough tokens");
@@ -57,24 +62,21 @@ contract Vendor {
     }
 
     function buyTokensForDAI(uint256 amount) public {
-        require(amount > 0, "You need to have at least some tokens");
-
-        uint256 tokenPrice = 1;
-        uint256  amountOfTokensToBuy = amount/tokenPrice;
+        require(amount > 0, "Maybe you would like to buy something greater than 0?");
+        uint256  amountOfTokensToBuy = amount;
+        require(myTokenContract.balanceOf(address(this)) < amountOfTokensToBuy, "Sorry, there is not enough tokens on my balance");
+        require(DAITokenContract.balanceOf(msg.sender) < amountOfTokensToBuy, "Sorry, you do not have enough DAI-tokens for swap");
 
         uint256 allowance = DAITokenContract.allowance(msg.sender, address(this));
         require(allowance >= amountOfTokensToBuy, "Check the token allowance");
 
-        if(myTokenContract.balanceOf(address(this)) > amountOfTokensToBuy){
-            DAITokenContract.transferFrom(msg.sender, address(this), amount);
-            myTokenContract.transfer(msg.sender, amountOfTokensToBuy);
-        } else {
-            (bool sent,) = msg.sender.call("Sorry, there is not enough tokens");
-        }
+        DAITokenContract.transferFrom(msg.sender, address(this), amount);
+        myTokenContract.transfer(msg.sender, amountOfTokensToBuy);
+
         return;
     }
 
-    function getLatestPrice() internal view returns (int) {
+    function getLatestPrice() public view returns (int) {
         (,int price,,,) = priceFeed.latestRoundData();
         return price;
     }

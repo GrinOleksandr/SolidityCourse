@@ -1,3 +1,4 @@
+require('solidity-coverage')
 import * as dotenv from 'dotenv'
 
 dotenv.config();
@@ -35,7 +36,8 @@ module.exports = {
     hardhat: {
       forking: {
         url: `https://rinkeby.infura.io/v3/${INFURA_KEY}`,
-        accounts: accountsTestnet
+        accounts: accountsTestnet,
+        // blockNumber: 9722579,
       }
     },
     mainnet: {
@@ -55,5 +57,8 @@ module.exports = {
     // Your API key for Etherscan
     // Obtain one at https://etherscan.io/
     apiKey: ETHERSCAN_API_KEY
+  },
+  mocha:{
+    timeout:50000
   }
 };

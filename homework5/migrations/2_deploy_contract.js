@@ -1,4 +1,3 @@
-// const TestToken = artifacts.require("TestToken");
 const Vendor = artifacts.require("Vendor");
 
 module.exports =async function (deployer) {
