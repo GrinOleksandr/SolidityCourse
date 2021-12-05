@@ -46,7 +46,8 @@ contract Vendor {
         uint256  amountOfTokensToBuy = msg.value/tokenPrice;
 
         if(myTokenContract.balanceOf(address(this)) < amountOfTokensToBuy){
-            (bool sent,) = msg.sender.call{value:msg.value}("Sorry, there is not enough tokens");
+            (bool success,) = msg.sender.call{value:msg.value}("Sorry, there is not enough tokens");
+//            require(success, "External call failed"); //ToDo uncomment when can write a test for this case :)
             return;
         }
 
@@ -66,11 +67,9 @@ contract Vendor {
 
         DAITokenContract.transferFrom(msg.sender, address(this), amountToBuy);
         myTokenContract.transfer(msg.sender, amountToBuy);
-
-        return;
     }
 
-    function getLatestPrice(address aggregatorAddress) internal returns (int256) {
+    function getLatestPrice(address aggregatorAddress) internal view returns (int256) {
             (,int price,,,) = AggregatorV3Interface(aggregatorAddress).latestRoundData();
             return int256(price);
     }
