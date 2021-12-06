@@ -47,7 +47,7 @@ contract Vendor {
 
         if(myTokenContract.balanceOf(address(this)) < amountOfTokensToBuy){
             (bool success,) = msg.sender.call{value:msg.value}("Sorry, there is not enough tokens");
-//            require(success, "External call failed"); //ToDo uncomment when can write a test for this case :)
+            require(success, "External call failed");
             return;
         }
 
