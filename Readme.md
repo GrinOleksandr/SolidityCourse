@@ -12,3 +12,9 @@
    + if you have free time left please  create a contract which will display the status of studentsList from this task, "red" if students < 10 etc.
    
 3) Create your own ERC20 token in any way, the primeray goal is it should be ERC20 compatible. Write contract for selling it, so I would be able to buy your token for ETH. And also make so if there are not enough tokens ATM at the contract, the ETH should be returned to sender with a message "Sorry, there is not enough tokens to buy". The price of your token should be (current price)ETH/USD / registeredStudentsLength (from homework2). this is how you can get the price of ETH/USD  https://docs.chain.link/docs/get-the-latest-price/ 
+4) No practical task.
+5) +Add ability to bui your tokens not only with ETH but also for other tokens(for example stablecoin like this on rinkeby -  https://ethereum.stackexchange.com/questions/72388/does-rinkeby-have-a-faucet-where-i-can-fill-a-wallet-with-dai/80204 or any other, just tell where and how to get it);
+
+   +Cover your exchange contract with unit tests, every function, so the coverage is 100%;
+   
+   +For the token you sell, create a pair on Uniswap v2 and add some liquidity(Token/ETH), so I will be able to sell your token for ETH
