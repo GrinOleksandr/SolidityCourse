@@ -56,8 +56,8 @@ contract Vendor {
 
     function buyTokensForDAI(uint256 amountToBuy) public {
         require(amountToBuy > 0, "Maybe you would like to buy something greater than 0?");
-        int  latestPrice = getLatestPrice(aggregatorAddressFor_DAI_USD)/100000000;
-        uint256  amountOfDAITokensToPay = amountToBuy/uint256(latestPrice);
+
+        uint256  amountOfDAITokensToPay = amountToBuy/uint256(getLatestPrice(aggregatorAddressFor_DAI_USD))/100000000;
 
         require(DAITokenContract.balanceOf(msg.sender) >= amountOfDAITokensToPay, "Sorry, you do not have enough DAI-tokens for swap");
         require(myTokenContract.balanceOf(address(this)) >= amountToBuy, "Sorry, there is not enough tokens on my balance");
