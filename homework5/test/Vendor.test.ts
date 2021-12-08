@@ -36,10 +36,6 @@ describe("Vendor", () => {
 
             const result = await vendorInstance.buyTokens({from: payer, value: paymentAmount});
 
-            // truffleAssert.eventEmitted(result, 'Bought', (ev: any) => {
-            //     return ev.payer.toLowerCase() === payer.toLowerCase() && ev.value.eq(web3.utils.toBN("1000000000000000000"));
-            // });
-
             const vendorTokenBalanceAfter = await testTokenInstance.balanceOf(vendorInstance.address);
             const tokenBalanceAfter = await testTokenInstance.balanceOf(payer);
 
