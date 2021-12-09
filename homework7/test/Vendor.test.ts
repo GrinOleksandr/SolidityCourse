@@ -27,40 +27,68 @@ describe("Vendor", () => {
 
         testTokenInstance = await TestToken.new(10000);
         DAITokenInstance = await DAIMockToken.new(50);
-        vendorInstance = await Vendor.new(testTokenInstance.address, DAITokenInstance.address);
         nftTockenInstance = await MockNFTToken.new(nftTokenId);
-        console.log('scv_nft_balance', await nftTockenInstance.balanceOf(owner));
-        console.log('scv_nft_isOwnerOf', await nftTockenInstance.ownerOf(nftTokenId));
+        vendorInstance = await Vendor.new(testTokenInstance.address, DAITokenInstance.address, nftTockenInstance.address, nftTokenId);
 
-        await DAITokenInstance.transfer(vendorInstance.address, web3.utils.toBN(5).mul(bn1e18));
         await testTokenInstance.transfer(vendorInstance.address, web3.utils.toBN(5).mul(bn1e18));
     });
 
     describe( "Buy tokens with ETH", function() {
-        it("Should buyTokens successfully", async () => {
-            const tokenBalanceBefore = await testTokenInstance.balanceOf(payer);
+        it("Should buyTokens with ETH successfully", async () => {
+            const tokenBalanceBefore = await testTokenInstance.balanceOf(owner);
             const vendorTokenBalanceBefore = await testTokenInstance.balanceOf(vendorInstance.address);
 
-            const result = await vendorInstance.buyTokens({from: payer, value: paymentAmount});
+            await vendorInstance.buyTokens({from: owner, value: paymentAmount});
 
             const vendorTokenBalanceAfter = await testTokenInstance.balanceOf(vendorInstance.address);
-            const tokenBalanceAfter = await testTokenInstance.balanceOf(payer);
+            const tokenBalanceAfter = await testTokenInstance.balanceOf(owner);
 
             assert.notEqual(web3.utils.toBN(0), vendorTokenBalanceBefore.sub(vendorTokenBalanceAfter));
             assert.equal(true, tokenBalanceBefore.eq(tokenBalanceAfter.sub(vendorTokenBalanceBefore.sub(vendorTokenBalanceAfter))));
         });
 
         it("Should get back ether if there is not enough Vendor token balance", async () => {
-            const ethBalanceBefore = await web3.eth.getBalance(payer);
-            const result = await vendorInstance.buyTokens({from: payer, value: paymentAmount.mul(web3.utils.toBN(1000))});
-            const ethBalanceAfter = await web3.eth.getBalance(payer);
+            const ethBalanceBefore = await web3.eth.getBalance(owner);
+            const result = await vendorInstance.buyTokens({from: owner, value: paymentAmount.mul(web3.utils.toBN(1000))});
+            const ethBalanceAfter = await web3.eth.getBalance(owner);
             const transaction = await web3.eth.getTransaction(result.tx);
 
             assert.equal(true, web3.utils.toBN(result.receipt.gasUsed).mul(web3.utils.toBN(transaction.gasPrice)).eq(web3.utils.toBN(ethBalanceBefore).sub(web3.utils.toBN(ethBalanceAfter))));
         });
+
+        it("Should throw an error if msg.sender is not an owner of 'key NFT token'", async () => {
+            await truffleAssert.reverts(
+                vendorInstance.buyTokens({from: payer, value: paymentAmount}),
+                "Sorry, you don't have a key to use this."
+            )
+        });
     });
 
     describe('Buy tokens with DAI', function(){
+        it("Should swap Tokens for DAI successfully", async () => {
+            await testTokenInstance.transfer(vendorInstance.address, web3.utils.toBN(500).mul(bn1e18));
+            await DAITokenInstance.approve(vendorInstance.address,web3.utils.toBN(50).mul(bn1e18));
+            const tokenBalanceBefore = await testTokenInstance.balanceOf(owner);
+            const vendorTokenBalanceBefore = await testTokenInstance.balanceOf(vendorInstance.address);
+
+            const DAIBalanceBefore = await DAITokenInstance.balanceOf(owner);
+            const vendorDAIBalanceBefore = await DAITokenInstance.balanceOf(vendorInstance.address);
+
+            await vendorInstance.buyTokensForDAI(web3.utils.toBN(3).mul(bn1e18));
+
+            const vendorTokenBalanceAfter = await testTokenInstance.balanceOf(vendorInstance.address);
+            const tokenBalanceAfter = await testTokenInstance.balanceOf(owner);
+
+            const DAIBalanceAfter = await DAITokenInstance.balanceOf(owner);
+            const vendorDAIBalanceAfter = await DAITokenInstance.balanceOf(vendorInstance.address);
+
+            assert.notEqual(web3.utils.toBN(0), vendorTokenBalanceBefore.sub(vendorTokenBalanceAfter));
+            assert.equal(true, tokenBalanceBefore.eq(tokenBalanceAfter.sub(vendorTokenBalanceBefore.sub(vendorTokenBalanceAfter))));
+
+            assert.notEqual(web3.utils.toBN(0), vendorDAIBalanceBefore.sub(vendorDAIBalanceAfter));
+            assert.equal(true, DAIBalanceBefore.eq(DAIBalanceAfter.sub(vendorDAIBalanceBefore.sub(vendorDAIBalanceAfter))));
+        });
+
         it("Should throw an error if amount < 0", async () => {
             await truffleAssert.reverts(
                     vendorInstance.buyTokensForDAI(0),
@@ -89,28 +117,11 @@ describe("Vendor", () => {
             );
         });
 
-        it("Should swap Tokens for DAI successfully", async () => {
-            await testTokenInstance.transfer(vendorInstance.address, web3.utils.toBN(500).mul(bn1e18));
-            await DAITokenInstance.approve(vendorInstance.address,web3.utils.toBN(50).mul(bn1e18));
-            const tokenBalanceBefore = await testTokenInstance.balanceOf(owner);
-            const vendorTokenBalanceBefore = await testTokenInstance.balanceOf(vendorInstance.address);
-
-            const DAIBalanceBefore = await DAITokenInstance.balanceOf(owner);
-            const vendorDAIBalanceBefore = await DAITokenInstance.balanceOf(vendorInstance.address);
-
-            await vendorInstance.buyTokensForDAI(web3.utils.toBN(3).mul(bn1e18));
-
-            const vendorTokenBalanceAfter = await testTokenInstance.balanceOf(vendorInstance.address);
-            const tokenBalanceAfter = await testTokenInstance.balanceOf(owner);
-
-            const DAIBalanceAfter = await DAITokenInstance.balanceOf(owner);
-            const vendorDAIBalanceAfter = await DAITokenInstance.balanceOf(vendorInstance.address);
-
-            assert.notEqual(web3.utils.toBN(0), vendorTokenBalanceBefore.sub(vendorTokenBalanceAfter));
-            assert.equal(true, tokenBalanceBefore.eq(tokenBalanceAfter.sub(vendorTokenBalanceBefore.sub(vendorTokenBalanceAfter))));
-
-            assert.notEqual(web3.utils.toBN(0), vendorDAIBalanceBefore.sub(vendorDAIBalanceAfter));
-            assert.equal(true, DAIBalanceBefore.eq(DAIBalanceAfter.sub(vendorDAIBalanceBefore.sub(vendorDAIBalanceAfter))));
+        it("Should throw an error if msg.sender is not an owner of 'key NFT token'", async () => {
+            await truffleAssert.reverts(
+                vendorInstance.buyTokensForDAI(web3.utils.toBN(3),{from: payer}),
+                "Sorry, you don't have a key to use this."
+            );
         });
     });
 });
