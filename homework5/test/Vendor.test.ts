@@ -25,7 +25,6 @@ describe("Vendor", () => {
         DAITokenInstance = await DAIMockToken.new(50);
         vendorInstance = await Vendor.new(testTokenInstance.address, DAITokenInstance.address);
 
-        await DAITokenInstance.transfer(vendorInstance.address, web3.utils.toBN(5).mul(bn1e18));
         await testTokenInstance.transfer(vendorInstance.address, web3.utils.toBN(5).mul(bn1e18));
     });
 

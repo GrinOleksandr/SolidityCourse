@@ -1,4 +1,4 @@
-//example deployed at  https://rinkeby.etherscan.io/address/0xfDB2A4608ea1F422aD66D3211A28d50aA219126c#code
+//example deployed at  https://rinkeby.etherscan.io/address/0x5c8F41aa7D3f76613eD0F41c0b9e302346876408#code
 
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
@@ -41,8 +41,7 @@ contract Vendor {
 
     function buyTokens() public payable {
         uint256  studentsAmount = getStudentsAmount();
-        int  latestPrice = getLatestPrice(aggregatorAddressFor_ETH_USD)/100000000;
-        uint256 tokenPrice = uint256(latestPrice) / studentsAmount;
+        uint256 tokenPrice = uint256(getLatestPrice(aggregatorAddressFor_ETH_USD)) / studentsAmount;
         uint256  amountOfTokensToBuy = msg.value/tokenPrice;
 
         if(myTokenContract.balanceOf(address(this)) < amountOfTokensToBuy){
@@ -57,7 +56,7 @@ contract Vendor {
     function buyTokensForDAI(uint256 amountToBuy) public {
         require(amountToBuy > 0, "Maybe you would like to buy something greater than 0?");
 
-        uint256  amountOfDAITokensToPay = amountToBuy/uint256(getLatestPrice(aggregatorAddressFor_DAI_USD))/100000000;
+        uint256 amountOfDAITokensToPay = amountToBuy/uint256(getLatestPrice(aggregatorAddressFor_DAI_USD));
 
         require(DAITokenContract.balanceOf(msg.sender) >= amountOfDAITokensToPay, "Sorry, you do not have enough DAI-tokens for swap");
         require(myTokenContract.balanceOf(address(this)) >= amountToBuy, "Sorry, there is not enough tokens on my balance");
@@ -69,9 +68,10 @@ contract Vendor {
         myTokenContract.transfer(msg.sender, amountToBuy);
     }
 
-    function getLatestPrice(address aggregatorAddress) internal view returns (int256) {
-            (,int price,,,) = AggregatorV3Interface(aggregatorAddress).latestRoundData();
-            return int256(price);
+    function getLatestPrice(address aggregatorAddress) internal view returns (uint256){
+        (,int price,,,) = AggregatorV3Interface(aggregatorAddress).latestRoundData();
+        uint8 decimals = AggregatorV3Interface(aggregatorAddress).decimals();
+        return uint256(price)/10**decimals;
     }
 
     function getStudentsAmount() internal view returns(uint256) {
