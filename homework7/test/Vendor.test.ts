@@ -4,6 +4,7 @@ import { assert, web3, artifacts } from "hardhat";
 const Vendor = artifacts.require("Vendor");
 const TestToken = artifacts.require("TestToken");
 const DAIMockToken = artifacts.require("DAIToken");
+const MockNFTToken = artifacts.require("MockNFTToken")
 
 const bn1e18 = web3.utils.toBN(1e18);
 
@@ -14,7 +15,10 @@ describe("Vendor", () => {
     let testTokenInstance: any;
     let vendorInstance: any;
     let DAITokenInstance: any;
+    let nftTockenInstance: any;
+
     const paymentAmount = bn1e18.muln(1);
+    const nftTokenId = 123456789
 
     beforeEach(async function () {
         accounts = await web3.eth.getAccounts();
@@ -24,6 +28,9 @@ describe("Vendor", () => {
         testTokenInstance = await TestToken.new(10000);
         DAITokenInstance = await DAIMockToken.new(50);
         vendorInstance = await Vendor.new(testTokenInstance.address, DAITokenInstance.address);
+        nftTockenInstance = await MockNFTToken.new(nftTokenId);
+        console.log('scv_nft_balance', await nftTockenInstance.balanceOf(owner));
+        console.log('scv_nft_isOwnerOf', await nftTockenInstance.ownerOf(nftTokenId));
 
         await DAITokenInstance.transfer(vendorInstance.address, web3.utils.toBN(5).mul(bn1e18));
         await testTokenInstance.transfer(vendorInstance.address, web3.utils.toBN(5).mul(bn1e18));
@@ -63,7 +70,7 @@ describe("Vendor", () => {
 
         it("Should throw an error if balance of DAI-token at msg.sender balance is too low", async () => {
             await truffleAssert.reverts(
-                vendorInstance.buyTokensForDAI(web3.utils.toBN(50000).mul(bn1e18)),
+                vendorInstance.buyTokensForDAI(web3.utils.toBN(100).mul(bn1e18)),
                 "Sorry, you do not have enough DAI-tokens for swap"
             );
         });
