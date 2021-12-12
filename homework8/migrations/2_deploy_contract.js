@@ -11,7 +11,7 @@ module.exports = async function (deployer) {
    await deployer.deploy(Vendor);
    const implementationInstance = await Vendor.deployed();
 
-   let data = implementationInstance.contract.methods.initialize(sgrnTokenContractAddressRinkeby, daiTokenContractAddressRinkeby, sigmaNFTTokenAddressRinkeby, myNFTTokenId).encodeABI();
+   const data = await implementationInstance.contract.methods.initialize(sgrnTokenContractAddressRinkeby, daiTokenContractAddressRinkeby, sigmaNFTTokenAddressRinkeby, myNFTTokenId).encodeABI();
    await deployer.deploy(Proxy, implementationInstance.address, data);
 
    // await deployer.deploy(VendorV2);
