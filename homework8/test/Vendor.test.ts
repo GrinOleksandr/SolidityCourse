@@ -38,8 +38,6 @@ describe("Vendor", () => {
 
         myProxyInstance = await new web3.eth.Contract(vendorInstance.abi, proxyInstance.address);
 
-        console.dir('scv_proxy', vendorInstance.abi)
-
         await testTokenInstance.transfer(proxyInstance.address, web3.utils.toBN(5).mul(bn1e18));
     });
 
@@ -48,7 +46,7 @@ describe("Vendor", () => {
             const tokenBalanceBefore = await testTokenInstance.balanceOf(owner);
             const vendorTokenBalanceBefore = await testTokenInstance.balanceOf(proxyInstance.address);
 
-            await myProxyInstance.methods.buyTokens({from: owner, value: paymentAmount});
+            await myProxyInstance.methods.buyTokens().send({from: owner, value: paymentAmount});
 
             const vendorTokenBalanceAfter = await testTokenInstance.balanceOf(proxyInstance.address);
             const tokenBalanceAfter = await testTokenInstance.balanceOf(owner);
@@ -59,16 +57,18 @@ describe("Vendor", () => {
 
         it("Should get back ether if there is not enough Vendor token balance", async () => {
             const ethBalanceBefore = await web3.eth.getBalance(owner);
-            const result = await myProxyInstance.methods.buyTokens({from: owner, value: paymentAmount.mul(web3.utils.toBN(1000))});
-            const ethBalanceAfter = await web3.eth.getBalance(owner);
-            const transaction = await web3.eth.getTransaction(result.tx);
+            const result = await myProxyInstance.methods.buyTokens().send({from: owner, value: paymentAmount.mul(web3.utils.toBN(1000))});
 
-            assert.equal(true, web3.utils.toBN(result.receipt.gasUsed).mul(web3.utils.toBN(transaction.gasPrice)).eq(web3.utils.toBN(ethBalanceBefore).sub(web3.utils.toBN(ethBalanceAfter))));
+            const ethBalanceAfter = await web3.eth.getBalance(owner);
+
+            const transaction = await web3.eth.getTransaction(result.transactionHash);
+
+            assert.equal(true, web3.utils.toBN(result.gasUsed).mul(web3.utils.toBN(transaction.gasPrice)).eq(web3.utils.toBN(ethBalanceBefore).sub(web3.utils.toBN(ethBalanceAfter))));
         });
 
         it("Should throw an error if msg.sender is not an owner of 'key NFT token'", async () => {
             await truffleAssert.reverts(
-                myProxyInstance.methods.buyTokens({from: payer, value: paymentAmount}),
+                myProxyInstance.methods.buyTokens().send({from: payer, value: paymentAmount}),
                 "Sorry, you don't have a key to use this."
             )
         });
@@ -101,35 +101,35 @@ describe("Vendor", () => {
 
         it("Should throw an error if amount < 0", async () => {
             await truffleAssert.reverts(
-                myProxyInstance.methods.buyTokensForDAI(0),
+                myProxyInstance.methods.buyTokensForDAI(0).call(),
                     "Maybe you would like to buy something greater than 0?"
                 );
             });
 
         it("Should throw an error if balance of DAI-token at msg.sender balance is too low", async () => {
             await truffleAssert.reverts(
-                myProxyInstance.methods.buyTokensForDAI(web3.utils.toBN(100).mul(bn1e18)),
+                myProxyInstance.methods.buyTokensForDAI(web3.utils.toBN(100).mul(bn1e18)).call(),
                 "Sorry, you do not have enough DAI-tokens for swap"
             );
         });
 
         it("Should throw an error if balance of SGRN-token at Vendor contract is too low", async () => {
             await truffleAssert.reverts(
-                myProxyInstance.methods.buyTokensForDAI(web3.utils.toBN(30).mul(bn1e18)),
+                myProxyInstance.methods.buyTokensForDAI(web3.utils.toBN(30).mul(bn1e18)).call(),
                 "Sorry, there is not enough tokens on my balance"
             );
         });
 
         it("Should throw an error if there is not enough allowance", async () => {
             await truffleAssert.reverts(
-                myProxyInstance.methods.buyTokensForDAI(web3.utils.toBN(3).mul(bn1e18)),
+                myProxyInstance.methods.buyTokensForDAI(web3.utils.toBN(3).mul(bn1e18)).call(),
                 "Check the token allowance please"
             );
         });
 
         it("Should throw an error if msg.sender is not an owner of 'key NFT token'", async () => {
             await truffleAssert.reverts(
-                myProxyInstance.methods.buyTokensForDAI(web3.utils.toBN(3),{from: payer}),
+                myProxyInstance.methods.buyTokensForDAI(web3.utils.toBN(3)).call({from: payer}),
                 "Sorry, you don't have a key to use this."
             );
         });

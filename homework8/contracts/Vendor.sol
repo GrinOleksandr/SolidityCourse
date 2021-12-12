@@ -41,7 +41,7 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable   {
     address myTokenContractAddress;
     address NFTTokenContractAddress;
     uint256 keyNftTokenId;
-
+    uint256 public version;
 
 
     modifier hasKeyNFTToken() {
@@ -58,13 +58,10 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable   {
         NFTTokenContractAddress = nftTokenContractAddress;
         keyNftTokenId = _keyNftTokenId;
         _transferOwnership(msg.sender);
+        version = 1;
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
-
-    function getVersion() external virtual pure returns (bytes32){
-        return "1";
-    }
 
     function _isTokenHolder() internal view {
         IERC721 NFTTokenContract = IERC721(NFTTokenContractAddress);

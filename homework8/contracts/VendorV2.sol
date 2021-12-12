@@ -41,7 +41,7 @@ contract VendorV2 is Initializable, OwnableUpgradeable, UUPSUpgradeable   {
     address myTokenContractAddress;
     address NFTTokenContractAddress;
     uint256 keyNftTokenId;
-
+    uint256 public version;
 
 
     modifier hasKeyNFTToken() {
@@ -58,20 +58,17 @@ contract VendorV2 is Initializable, OwnableUpgradeable, UUPSUpgradeable   {
         NFTTokenContractAddress = nftTokenContractAddress;
         keyNftTokenId = _keyNftTokenId;
         _transferOwnership(msg.sender);
+        version = 2;
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
-
-    function getVersion() external virtual pure returns (bytes32){
-        return "2";
-    }
 
     function _isTokenHolder() internal view {
         IERC721 NFTTokenContract = IERC721(NFTTokenContractAddress);
         require(NFTTokenContract.ownerOf(keyNftTokenId) == msg.sender, "Sorry, you don't have a key to use this.");
     }
 
-    function buyTokens2() public payable hasKeyNFTToken {
+    function buyTokens() public payable hasKeyNFTToken {
         IERC20 myTokenContract = IERC20(myTokenContractAddress);
         uint256 tokenPrice = uint256(getLatestPrice(aggregatorAddressFor_ETH_USD)) / getStudentsAmount();
         uint256  amountOfTokensToBuy = msg.value/tokenPrice;
@@ -85,7 +82,7 @@ contract VendorV2 is Initializable, OwnableUpgradeable, UUPSUpgradeable   {
         myTokenContract.transfer(msg.sender, amountOfTokensToBuy);
     }
 
-    function buyTokensForDAI2(uint256 amountToBuy) public hasKeyNFTToken {
+    function buyTokensForDAI(uint256 amountToBuy) public hasKeyNFTToken {
         IERC20 DAITokenContract = IERC20(DAITokenContractAddress);
         IERC20 myTokenContract = IERC20(myTokenContractAddress);
         require(amountToBuy > 0, "Maybe you would like to buy something greater than 0?");

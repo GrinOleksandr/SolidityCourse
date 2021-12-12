@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "migrate-rinkeby": "truffle migrate --network rinkeby --reset --compile-all -f 2 --to 2",
-    "verify-rinkeby": "truffle run verify Vendor ERC1967Proxy --network rinkeby",
+    "verify-rinkeby": "truffle run verify Vendor ERC1967Proxy VendorV2 --network rinkeby",
     "test": "npx hardhat test ./test/Vendor.test.ts",
     "coverage": "npx hardhat coverage"
   },
