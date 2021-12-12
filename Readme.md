@@ -18,3 +18,6 @@
    +Cover your exchange contract with unit tests, every function, so the coverage is 100%;
    
    +For the token you sell, create a pair on Uniswap v2 and add some liquidity(Token/ETH), so I will be able to sell your token for ETH
+6) No practical task.
+7) Add a restriction to your contract so only the owner of some NFT token can buy your tokens
+8) Make your contract upgradeable  
