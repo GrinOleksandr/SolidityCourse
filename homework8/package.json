@@ -29,7 +29,7 @@
     "hardhat": "^2.6.8",
     "mocha": "^8.1.2",
     "pify": "^2.3.0",
-    "prettier": "^2.4.1",
+    "prettier": "^2.5.1",
     "solhint": "^3.3.6",
     "solidity-coverage": "^0.7.17",
     "truffle": "^5.4.21",
