@@ -41,7 +41,6 @@ contract VendorV2 is Initializable, OwnableUpgradeable, UUPSUpgradeable   {
     address myTokenContractAddress;
     address NFTTokenContractAddress;
     uint256 keyNftTokenId;
-    uint256 public version;
 
 
     modifier hasKeyNFTToken() {
@@ -58,7 +57,6 @@ contract VendorV2 is Initializable, OwnableUpgradeable, UUPSUpgradeable   {
         NFTTokenContractAddress = nftTokenContractAddress;
         keyNftTokenId = _keyNftTokenId;
         _transferOwnership(msg.sender);
-        version = 2;
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
