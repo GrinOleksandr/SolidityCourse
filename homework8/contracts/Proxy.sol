@@ -1,4 +1,4 @@
-//example https://rinkeby.etherscan.io/address/0xBB312f42cb2A4cae49127A0CA8e2666EfB6cc83C#readProxyContract
+//example https://rinkeby.etherscan.io/address/0x94560803535bC01E0B7e9aEa5f54b3856CecF266#code
 
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.10;

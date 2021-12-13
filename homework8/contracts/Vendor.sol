@@ -1,4 +1,4 @@
-//example deployed at
+//example deployed at  https://rinkeby.etherscan.io/address/0x7ea75b21D0A69cfad760d4fe95ab086C1508D2cd#code
 
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
@@ -41,7 +41,6 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable   {
     address myTokenContractAddress;
     address NFTTokenContractAddress;
     uint256 keyNftTokenId;
-    uint256 public version;
 
 
     modifier hasKeyNFTToken() {
@@ -58,7 +57,6 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable   {
         NFTTokenContractAddress = nftTokenContractAddress;
         keyNftTokenId = _keyNftTokenId;
         _transferOwnership(msg.sender);
-        version = 1;
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
