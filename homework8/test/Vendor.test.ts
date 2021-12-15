@@ -161,7 +161,7 @@ describe('Vendor', () => {
     });
   });
 
-  describe('Upgradeable part', function () {
+  describe('Upgradeability test', function () {
     it('Should allow to upgrade only for owner', async () => {
       await truffleAssert.reverts(
         myProxyInstance.methods.upgradeTo(vendorV2Instance.address).call({ from: payer }),

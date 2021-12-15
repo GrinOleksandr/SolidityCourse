@@ -33,7 +33,12 @@ interface studentsInterface {
 }
 
 
+
+
 contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable   {
+    event Log(string message);
+    event LogBytes(bytes message);
+
     address studentsContractAddress = 0x0E822C71e628b20a35F8bCAbe8c11F274246e64D;
     address aggregatorAddressFor_ETH_USD = 0x8A753747A1Fa494EC906cE90E9f37563A8AF630e;
     address aggregatorAddressFor_DAI_USD = 0x2bA49Aaa16E6afD2a993473cfB70Fa8559B523cF;
@@ -77,7 +82,13 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable   {
             return;
         }
 
-        myTokenContract.transfer(msg.sender, amountOfTokensToBuy);
+        try myTokenContract.transfer(msg.sender, amountOfTokensToBuy) {
+            emit Log("tokens transfered");
+        } catch Error(string memory reason) {
+            emit Log(reason);
+        } catch (bytes memory reason) {
+            emit LogBytes(reason);
+        }
     }
 
     function buyTokensForDAI(uint256 amountToBuy) public hasKeyNFTToken {
@@ -93,8 +104,21 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable   {
         uint256 allowance = DAITokenContract.allowance(msg.sender, address(this));
         require(allowance >= amountToBuy, "Check the token allowance please");
 
-        DAITokenContract.transferFrom(msg.sender, address(this), amountToBuy);
-        myTokenContract.transfer(msg.sender, amountToBuy);
+        try DAITokenContract.transferFrom(msg.sender, address(this), amountToBuy) {
+            emit Log("DAItokens transferedFrom");
+        } catch Error(string memory reason) {
+            emit Log(reason);
+        } catch (bytes memory reason) {
+            emit LogBytes(reason);
+        }
+
+        try myTokenContract.transfer(msg.sender, amountToBuy) {
+            emit Log("tokens transfered");
+        } catch Error(string memory reason) {
+            emit Log(reason);
+        } catch (bytes memory reason) {
+            emit LogBytes(reason);
+        }
     }
 
     function getLatestPrice(address aggregatorAddress) internal view returns (uint256){
