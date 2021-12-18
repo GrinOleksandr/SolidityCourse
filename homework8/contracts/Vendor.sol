@@ -41,7 +41,6 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable   {
 
     address studentsContractAddress;
     address aggregatorAddressFor_ETH_USD;
-    address aggregatorAddressFor_DAI_USD;
     address DAITokenContractAddress;
     address myTokenContractAddress;
     address NFTTokenContractAddress;
@@ -56,7 +55,6 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable   {
     function initialize(address tokenContractAddress, address _DAITokenContractAddress, address nftTokenContractAddress, uint256 _keyNftTokenId) public initializer {
         studentsContractAddress = 0x0E822C71e628b20a35F8bCAbe8c11F274246e64D;
         aggregatorAddressFor_ETH_USD = 0x8A753747A1Fa494EC906cE90E9f37563A8AF630e;
-        aggregatorAddressFor_DAI_USD = 0x2bA49Aaa16E6afD2a993473cfB70Fa8559B523cF;
         DAITokenContractAddress = _DAITokenContractAddress;
         myTokenContractAddress = tokenContractAddress;
         NFTTokenContractAddress = nftTokenContractAddress;
@@ -68,7 +66,7 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable   {
 
     function _isTokenHolder() internal view {
         IERC721 NFTTokenContract = IERC721(NFTTokenContractAddress);
-        require(NFTTokenContract.ownerOf(keyNftTokenId) == msg.sender, "Sorry, you don't have a key to use this.");
+        require(NFTTokenContract.balanceOf(msg.sender) > 0 , "Sorry, you don't have a key to use this.");
     }
 
     function buyTokens() public payable hasKeyNFTToken {
