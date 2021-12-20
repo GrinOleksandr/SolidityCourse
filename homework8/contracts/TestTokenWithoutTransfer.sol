@@ -90,7 +90,7 @@ contract TestTokenWithoutTransfer is Context, IERC20, IERC20Metadata {
     }
 
     function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
-        assert(1 == 2);
+        assert(false);
         return true;
     }
 
