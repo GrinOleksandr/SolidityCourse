@@ -33,10 +33,14 @@ interface studentsInterface {
 }
 
 
+
+
 contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable   {
-    address studentsContractAddress = 0x0E822C71e628b20a35F8bCAbe8c11F274246e64D;
-    address aggregatorAddressFor_ETH_USD = 0x8A753747A1Fa494EC906cE90E9f37563A8AF630e;
-    address aggregatorAddressFor_DAI_USD = 0x2bA49Aaa16E6afD2a993473cfB70Fa8559B523cF;
+    event Log(string message);
+    event LogBytes(bytes message);
+
+    address studentsContractAddress;
+    address aggregatorAddressFor_ETH_USD;
     address DAITokenContractAddress;
     address myTokenContractAddress;
     address NFTTokenContractAddress;
@@ -51,7 +55,6 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable   {
     function initialize(address tokenContractAddress, address _DAITokenContractAddress, address nftTokenContractAddress, uint256 _keyNftTokenId) public initializer {
         studentsContractAddress = 0x0E822C71e628b20a35F8bCAbe8c11F274246e64D;
         aggregatorAddressFor_ETH_USD = 0x8A753747A1Fa494EC906cE90E9f37563A8AF630e;
-        aggregatorAddressFor_DAI_USD = 0x2bA49Aaa16E6afD2a993473cfB70Fa8559B523cF;
         DAITokenContractAddress = _DAITokenContractAddress;
         myTokenContractAddress = tokenContractAddress;
         NFTTokenContractAddress = nftTokenContractAddress;
@@ -63,7 +66,7 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable   {
 
     function _isTokenHolder() internal view {
         IERC721 NFTTokenContract = IERC721(NFTTokenContractAddress);
-        require(NFTTokenContract.ownerOf(keyNftTokenId) == msg.sender, "Sorry, you don't have a key to use this.");
+        require(NFTTokenContract.balanceOf(msg.sender) > 0 , "Sorry, you don't have a key to use this.");
     }
 
     function buyTokens() public payable hasKeyNFTToken {
@@ -77,7 +80,13 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable   {
             return;
         }
 
-        myTokenContract.transfer(msg.sender, amountOfTokensToBuy);
+        try myTokenContract.transfer(msg.sender, amountOfTokensToBuy) {
+            emit Log("tokens transfered");
+        } catch Error(string memory reason) {
+            emit Log(reason);
+        } catch (bytes memory reason) {
+            emit LogBytes(reason);
+        }
     }
 
     function buyTokensForDAI(uint256 amountToBuy) public hasKeyNFTToken {
@@ -85,7 +94,7 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable   {
         IERC20 myTokenContract = IERC20(myTokenContractAddress);
         require(amountToBuy > 0, "Maybe you would like to buy something greater than 0?");
 
-        uint256 amountOfDAITokensToPay = amountToBuy/uint256(getLatestPrice(aggregatorAddressFor_DAI_USD));
+        uint256 amountOfDAITokensToPay = amountToBuy;
 
         require(DAITokenContract.balanceOf(msg.sender) >= amountOfDAITokensToPay, "Sorry, you do not have enough DAI-tokens for swap");
         require(myTokenContract.balanceOf(address(this)) >= amountToBuy, "Sorry, there is not enough tokens on my balance");
@@ -95,11 +104,13 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable   {
 
         DAITokenContract.transferFrom(msg.sender, address(this), amountToBuy);
         myTokenContract.transfer(msg.sender, amountToBuy);
+
     }
 
-    function getLatestPrice(address aggregatorAddress) internal view returns (uint256){
+    function getLatestPrice(address aggregatorAddress) internal returns (uint256){
         (,int price,,,) = AggregatorV3Interface(aggregatorAddress).latestRoundData();
         uint8 decimals = AggregatorV3Interface(aggregatorAddress).decimals();
+
         return uint256(price)/10**decimals;
     }
 
