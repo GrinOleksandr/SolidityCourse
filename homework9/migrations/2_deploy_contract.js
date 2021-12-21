@@ -20,7 +20,7 @@ module.exports = async function (deployer) {
     )
     .encodeABI();
 
-  await deployer.deploy(Proxy, implementationInstance.address, data);
-
-  await deployer.deploy(VendorV2);
+  // await deployer.deploy(Proxy, implementationInstance.address, data);
+  //
+  // await deployer.deploy(VendorV2);
 };
