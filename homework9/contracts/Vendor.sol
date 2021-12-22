@@ -42,12 +42,9 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, VRFConsum
     event LogBytes(bytes message);
     event RandomNumberUpdated(uint256 number);
 
-    address studentsContractAddress;
     address aggregatorAddressFor_ETH_USD;
     address DAITokenContractAddress;
     address myTokenContractAddress;
-    address NFTTokenContractAddress;
-    uint256 keyNftTokenId;
 
     bytes32 public keyHash;
     uint256 public randomResult;
@@ -58,31 +55,23 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, VRFConsum
     bytes32 private jobId;
     uint256 private chainlinkFee;
 
-    modifier hasKeyNFTToken() {
-        _isTokenHolder();
-        _;
-    }
-
     constructor()
     VRFConsumerBase(
-        0xb3dCcb4Cf7a26f6cf6B120Cf5A73875B7BBc655B, // VRF Coordinator
-        0x01BE23585060835E02B77ef475b0Cc51aA1e0709  // LINK Token
+        0xdD3782915140c8f3b190B5D67eAc6dc5760C46E9, // VRF Coordinator
+        0xa36085F69e2889c224210F603D836748e7dC0088  // LINK Token
     )
     {}
 
-    function initialize(address tokenContractAddress, address _DAITokenContractAddress, address nftTokenContractAddress, uint256 _keyNftTokenId)  public initializer
+    function initialize(address tokenContractAddress, address _DAITokenContractAddress)  public initializer
     {
-        studentsContractAddress = 0x0E822C71e628b20a35F8bCAbe8c11F274246e64D;
         aggregatorAddressFor_ETH_USD = 0x8A753747A1Fa494EC906cE90E9f37563A8AF630e;
         DAITokenContractAddress = _DAITokenContractAddress;
         myTokenContractAddress = tokenContractAddress;
-        NFTTokenContractAddress = nftTokenContractAddress;
-        keyNftTokenId = _keyNftTokenId;
-        keyHash = 0x2ed0feb3e7fd2022120aa84fab1945545a9f2ffc9076fd6156fa96eaff4c1311;
+        keyHash = 0x6c3699283bda56ad74f6b855546325b68d482e983852a7a82979cc4807b641f4;
         chainlinkFee = 0.1 * 10 ** 18; // 0.1 LINK (Varies by network)
         setPublicChainlinkToken();
-        oracle = 0x7AFe1118Ea78C1eae84ca8feE5C65Bc76CcF879e;
-        jobId = "6d1bfe27e7034b1d87b5270556b17277";
+        oracle = 0xc57B33452b4F7BB189bB5AfaE9cc4aBa1f7a4FD8;
+        jobId = "83ba9ddc927946198fbd0bf1bd8a8c25";
         _transferOwnership(msg.sender);
     }
 
@@ -121,14 +110,9 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, VRFConsum
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
-    function _isTokenHolder() internal view {
-        IERC721 NFTTokenContract = IERC721(NFTTokenContractAddress);
-        require(NFTTokenContract.balanceOf(msg.sender) > 0 , "Sorry, you don't have a key to use this.");
-    }
-
-    function buyTokens() public payable hasKeyNFTToken {
+    function buyTokens() public payable {
         IERC20 myTokenContract = IERC20(myTokenContractAddress);
-        uint256 tokenPrice = uint256(getLatestPrice(aggregatorAddressFor_ETH_USD)) / getStudentsAmount();
+        uint256 tokenPrice = uint256(getLatestPrice(aggregatorAddressFor_ETH_USD)) / 35;
         uint256  amountOfTokensToBuy = msg.value/tokenPrice;
 
         if(myTokenContract.balanceOf(address(this)) < amountOfTokensToBuy){
@@ -146,7 +130,7 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, VRFConsum
         }
     }
 
-    function buyTokensForDAI(uint256 amountToBuy) public hasKeyNFTToken {
+    function buyTokensForDAI(uint256 amountToBuy) public {
         IERC20 DAITokenContract = IERC20(DAITokenContractAddress);
         IERC20 myTokenContract = IERC20(myTokenContractAddress);
         require(amountToBuy > 0, "Maybe you would like to buy something greater than 0?");
@@ -161,7 +145,6 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, VRFConsum
 
         DAITokenContract.transferFrom(msg.sender, address(this), amountToBuy);
         myTokenContract.transfer(msg.sender, amountToBuy);
-
     }
 
     function getLatestPrice(address aggregatorAddress) internal returns (uint256){
@@ -169,11 +152,6 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, VRFConsum
         uint8 decimals = AggregatorV3Interface(aggregatorAddress).decimals();
 
         return uint256(price)/10**decimals;
-    }
-
-    function getStudentsAmount() internal view returns(uint256) {
-        string[] memory studentsList = studentsInterface(studentsContractAddress).getStudentsList();
-        return studentsList.length;
     }
 
    function getRandomNumber() public returns (bytes32 requestId) {
