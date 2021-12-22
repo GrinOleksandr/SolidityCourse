@@ -1,5 +1,5 @@
-//example deployed at  https://rinkeby.etherscan.io/address/0x7ea75b21D0A69cfad760d4fe95ab086C1508D2cd#code
-
+//example deployed at https://rinkeby.etherscan.io/address/0x7ea75b21D0A69cfad760d4fe95ab086C1508D2cd
+//example deployed at https://kovan.etherscan.io/address/0x18DAF3C01573B827A067BFd02349B0d5588242aB
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
@@ -41,10 +41,24 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, VRFConsum
     event Log(string message);
     event LogBytes(bytes message);
     event RandomNumberUpdated(uint256 number);
+    event MyTokensTransfered(uint256 number);
 
     address aggregatorAddressFor_ETH_USD;
     address DAITokenContractAddress;
     address myTokenContractAddress;
+    uint256 requestIndex;
+    struct Operation {
+        address sender;
+        uint8 operationTypeId;
+        uint256 amount;
+        uint256 randomNumber;
+        uint256 eth_usd_price;
+    }
+
+//    User[] public queue;
+    mapping(uint256 => Operation) public queue;
+    mapping(bytes32 => uint256) getRequestIndexFromRandomnessRequestId;
+    mapping(bytes32 => uint256) getRequestIndexFromPriceRequestId;
 
     bytes32 public keyHash;
     uint256 public randomResult;
@@ -55,16 +69,24 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, VRFConsum
     bytes32 private jobId;
     uint256 private chainlinkFee;
 
+    ////to remove
+    uint256 public test1;
+    uint256 public test2;
+    uint256 public test3;
+    uint256 public test4;
+
+
+
+    ///////
+
     constructor()
     VRFConsumerBase(
         0xdD3782915140c8f3b190B5D67eAc6dc5760C46E9, // VRF Coordinator
         0xa36085F69e2889c224210F603D836748e7dC0088  // LINK Token
-    )
-    {}
+    ){}
 
     function initialize(address tokenContractAddress, address _DAITokenContractAddress)  public initializer
     {
-        aggregatorAddressFor_ETH_USD = 0x8A753747A1Fa494EC906cE90E9f37563A8AF630e;
         DAITokenContractAddress = _DAITokenContractAddress;
         myTokenContractAddress = tokenContractAddress;
         keyHash = 0x6c3699283bda56ad74f6b855546325b68d482e983852a7a82979cc4807b641f4;
@@ -73,6 +95,13 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, VRFConsum
         oracle = 0xc57B33452b4F7BB189bB5AfaE9cc4aBa1f7a4FD8;
         jobId = "83ba9ddc927946198fbd0bf1bd8a8c25";
         _transferOwnership(msg.sender);
+    }
+
+    function addToQueue (uint8 _operationTypeId, uint256 _amount, bytes32 _randomnessRequestId, bytes32 _priceRequestId) public {
+        Operation memory newOperation = Operation(msg.sender, _operationTypeId, _amount, 0, 0);
+        queue[requestIndex] = newOperation;
+        getRequestIndexFromRandomnessRequestId[_randomnessRequestId] = requestIndex;
+        getRequestIndexFromPriceRequestId[_priceRequestId] = requestIndex;
     }
 
     function request_ETH_USD_price() public returns (bytes32 requestId)
@@ -98,6 +127,7 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, VRFConsum
         int timesAmount = 10**18;
         request.addInt("times", timesAmount);
         emit Log('chainlink price request sent');
+
         // Sends the request
         return sendChainlinkRequestTo(oracle, request, chainlinkFee);
     }
@@ -106,23 +136,61 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, VRFConsum
     {
         emit PriceUpdated(_eth_usd_price);
         eth_usd_price = _eth_usd_price;
+
+        uint256 index = getRequestIndexFromRandomnessRequestId[_requestId];
+        queue[index].eth_usd_price = _eth_usd_price;
+
+        processBuyRequest(index);
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     function buyTokens() public payable {
-        IERC20 myTokenContract = IERC20(myTokenContractAddress);
-        uint256 tokenPrice = uint256(getLatestPrice(aggregatorAddressFor_ETH_USD)) / 35;
-        uint256  amountOfTokensToBuy = msg.value/tokenPrice;
+        bytes32 priceRequestId = request_ETH_USD_price();
+        bytes32 randomnessRequestId = getRandomNumber();
+        addToQueue(1, msg.value, randomnessRequestId, priceRequestId);
+    }
 
+    function processBuyRequest(uint256 index) internal {
+        Operation memory request = queue[index];
+        if(request.operationTypeId == 1){
+            if(request.eth_usd_price == 0 || request.randomNumber == 0){
+                return;
+            }
+            return _buyTokensForETH(request.sender, request.eth_usd_price, request.randomNumber, request.amount);
+        }
+
+        if(request.operationTypeId == 2){
+            if(request.randomNumber == 0){
+                return;
+            }
+            return _buyTokensForDAI(request.sender, request.randomNumber, request.amount);
+        }
+    }
+
+    function _buyTokensForETH(address sender, uint256 price, uint256 randomNumber, uint256 amountPayed) internal {
+        IERC20 myTokenContract = IERC20(myTokenContractAddress);
+        uint256 multiplier = randomNumber/10;
+        uint256 tokenPrice = price/35;
+        uint256 amountOfTokensToBuy = (amountPayed/tokenPrice)*multiplier;
+
+        ///////
+        test1 = price;
+        test2 = multiplier;
+        test3 = tokenPrice;
+        test4 = amountOfTokensToBuy;
+        ///////
+
+        //ToDo fix this
         if(myTokenContract.balanceOf(address(this)) < amountOfTokensToBuy){
             (bool success,) = msg.sender.call{value:msg.value}("Sorry, there is not enough tokens");
             require(success, "External call failed");
             return;
         }
 
-        try myTokenContract.transfer(msg.sender, amountOfTokensToBuy) {
-            emit Log("tokens transfered");
+        //ToDo fix this
+        try myTokenContract.transfer(sender, amountOfTokensToBuy) {
+            emit MyTokensTransfered(amountOfTokensToBuy);
         } catch Error(string memory reason) {
             emit Log(reason);
         } catch (bytes memory reason) {
@@ -131,41 +199,41 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, VRFConsum
     }
 
     function buyTokensForDAI(uint256 amountToBuy) public {
+        bytes32 randomnessRequestId = getRandomNumber();
+        addToQueue(2, amountToBuy, randomnessRequestId, 0x0);
+    }
+
+    function _buyTokensForDAI(address sender, uint256 randomNumber, uint256 amount) public {
         IERC20 DAITokenContract = IERC20(DAITokenContractAddress);
         IERC20 myTokenContract = IERC20(myTokenContractAddress);
-        require(amountToBuy > 0, "Maybe you would like to buy something greater than 0?");
 
-        uint256 amountOfDAITokensToPay = amountToBuy;
+        uint256 amountOfDAITokensToPay = amount;
+        uint256 allowance = DAITokenContract.allowance(sender, address(this));
 
-        require(DAITokenContract.balanceOf(msg.sender) >= amountOfDAITokensToPay, "Sorry, you do not have enough DAI-tokens for swap");
-        require(myTokenContract.balanceOf(address(this)) >= amountToBuy, "Sorry, there is not enough tokens on my balance");
+        if(amount > 0 || DAITokenContract.balanceOf(sender) >= amountOfDAITokensToPay || myTokenContract.balanceOf(address(this)) >= amount || allowance >= amount){
+            return;
+        }
 
-        uint256 allowance = DAITokenContract.allowance(msg.sender, address(this));
-        require(allowance >= amountToBuy, "Check the token allowance please");
-
-        DAITokenContract.transferFrom(msg.sender, address(this), amountToBuy);
-        myTokenContract.transfer(msg.sender, amountToBuy);
+        DAITokenContract.transferFrom(sender, address(this), amountOfDAITokensToPay);
+        myTokenContract.transfer(sender, amount);
+        emit MyTokensTransfered(amount);
     }
 
-    function getLatestPrice(address aggregatorAddress) internal returns (uint256){
-        (,int price,,,) = AggregatorV3Interface(aggregatorAddress).latestRoundData();
-        uint8 decimals = AggregatorV3Interface(aggregatorAddress).decimals();
-
-        return uint256(price)/10**decimals;
-    }
-
-   function getRandomNumber() public returns (bytes32 requestId) {
+    function getRandomNumber() public returns (bytes32 requestId) {
         require(LINK.balanceOf(address(this)) >= chainlinkFee, "Not enough LINK - fill contract with faucet");
         emit Log('Request for random number sent');
         return requestRandomness(keyHash, chainlinkFee);
    }
 
-    /**
-     * Callback function used by VRF Coordinator
-     */
     function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
         emit RandomNumberUpdated(randomness);
-        randomResult = randomness;
+        randomResult = (randomness % 30) + 5;
+        emit RandomNumberUpdated(randomResult);
+
+        uint256 index = getRequestIndexFromRandomnessRequestId[requestId];
+        queue[index].randomNumber = randomResult;
+
+        processBuyRequest(index);
     }
 
     function myAddress() public view returns(address){
