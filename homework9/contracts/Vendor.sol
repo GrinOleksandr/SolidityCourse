@@ -70,23 +70,23 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, VRFConsum
     uint256 private chainlinkFee;
 
     ////to remove
+    uint256 public test0;
     uint256 public test1;
     uint256 public test2;
     uint256 public test3;
     uint256 public test4;
+    uint256 public test5;
+    uint256 public test6;
 
 
 
     ///////
 
-    constructor()
+    constructor(address tokenContractAddress, address _DAITokenContractAddress)
     VRFConsumerBase(
         0xdD3782915140c8f3b190B5D67eAc6dc5760C46E9, // VRF Coordinator
         0xa36085F69e2889c224210F603D836748e7dC0088  // LINK Token
-    ){}
-
-    function initialize(address tokenContractAddress, address _DAITokenContractAddress)  public initializer
-    {
+    ){
         DAITokenContractAddress = _DAITokenContractAddress;
         myTokenContractAddress = tokenContractAddress;
         keyHash = 0x6c3699283bda56ad74f6b855546325b68d482e983852a7a82979cc4807b641f4;
@@ -96,6 +96,18 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, VRFConsum
         jobId = "83ba9ddc927946198fbd0bf1bd8a8c25";
         _transferOwnership(msg.sender);
     }
+
+//    function initialize(address tokenContractAddress, address _DAITokenContractAddress)  public initializer
+//    {
+//        DAITokenContractAddress = _DAITokenContractAddress;
+//        myTokenContractAddress = tokenContractAddress;
+//        keyHash = 0x6c3699283bda56ad74f6b855546325b68d482e983852a7a82979cc4807b641f4;
+//        chainlinkFee = 0.1 * 10 ** 18; // 0.1 LINK (Varies by network)
+//        setPublicChainlinkToken();
+//        oracle = 0xc57B33452b4F7BB189bB5AfaE9cc4aBa1f7a4FD8;
+//        jobId = "83ba9ddc927946198fbd0bf1bd8a8c25";
+//        _transferOwnership(msg.sender);
+//    }
 
     function addToQueue (uint8 _operationTypeId, uint256 _amount, bytes32 _randomnessRequestId, bytes32 _priceRequestId) public {
         Operation memory newOperation = Operation(msg.sender, _operationTypeId, _amount, 0, 0);
@@ -172,13 +184,19 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, VRFConsum
         IERC20 myTokenContract = IERC20(myTokenContractAddress);
         uint256 multiplier = randomNumber/10;
         uint256 tokenPrice = price/35;
-        uint256 amountOfTokensToBuy = (amountPayed/tokenPrice)*multiplier;
+        uint256 amountOfTokensToBuy = (amountPayed/(price/35))*(randomNumber/10);
 
         ///////
-        test1 = price;
-        test2 = multiplier;
-        test3 = tokenPrice;
-        test4 = amountOfTokensToBuy;
+        test0 = randomNumber;
+        test1 = multiplier;
+        test2 = amountPayed;
+        test3 = price;
+        test4 = tokenPrice;
+        test5 = amountOfTokensToBuy;
+        test6 = (amountPayed/tokenPrice);
+
+//        test7 = tokenPrice;
+//        test8 = amountOfTokensToBuy;
         ///////
 
         //ToDo fix this
@@ -189,7 +207,7 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, VRFConsum
         }
 
         //ToDo fix this
-        try myTokenContract.transfer(sender, amountOfTokensToBuy) {
+        try myTokenContract.transfer(sender, (amountPayed/(price/35))*(randomNumber/10)*10**18) {
             emit MyTokensTransfered(amountOfTokensToBuy);
         } catch Error(string memory reason) {
             emit Log(reason);
@@ -200,7 +218,7 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, VRFConsum
 
     function buyTokensForDAI(uint256 amountToBuy) public {
         bytes32 randomnessRequestId = getRandomNumber();
-        addToQueue(2, amountToBuy, randomnessRequestId, 0x0);
+        addToQueue(2, amountToBuy, randomnessRequestId, "");
     }
 
     function _buyTokensForDAI(address sender, uint256 randomNumber, uint256 amount) public {
@@ -227,7 +245,7 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, VRFConsum
 
     function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
         emit RandomNumberUpdated(randomness);
-        randomResult = (randomness % 30) + 5;
+        randomResult = (randomness % 26) + 5;
         emit RandomNumberUpdated(randomResult);
 
         uint256 index = getRequestIndexFromRandomnessRequestId[requestId];
