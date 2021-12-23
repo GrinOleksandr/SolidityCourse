@@ -77,6 +77,7 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, VRFConsum
     uint256 public test4;
     uint256 public test5;
     uint256 public test6;
+    uint256 public test7;
 
 
 
@@ -176,38 +177,23 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, VRFConsum
             if(request.randomNumber == 0){
                 return;
             }
+            emit Log('buy_for_dai_1');
             return _buyTokensForDAI(request.sender, request.randomNumber, request.amount);
         }
     }
 
     function _buyTokensForETH(address sender, uint256 price, uint256 randomNumber, uint256 amountPayed) internal {
         IERC20 myTokenContract = IERC20(myTokenContractAddress);
-        uint256 multiplier = randomNumber/10;
-        uint256 tokenPrice = price/35;
-        uint256 amountOfTokensToBuy = (amountPayed/(price/35))*(randomNumber/10);
 
-        ///////
-        test0 = randomNumber;
-        test1 = multiplier;
-        test2 = amountPayed;
-        test3 = price;
-        test4 = tokenPrice;
-        test5 = amountOfTokensToBuy;
-        test6 = (amountPayed/tokenPrice);
+        uint256 amountOfTokensToBuy = amountPayed * price * randomNumber / 35 / 10 ** 18 / 10;
 
-//        test7 = tokenPrice;
-//        test8 = amountOfTokensToBuy;
-        ///////
-
-        //ToDo fix this
         if(myTokenContract.balanceOf(address(this)) < amountOfTokensToBuy){
             (bool success,) = msg.sender.call{value:msg.value}("Sorry, there is not enough tokens");
             require(success, "External call failed");
             return;
         }
 
-        //ToDo fix this
-        try myTokenContract.transfer(sender, (amountPayed/(price/35))*(randomNumber/10)*10**18) {
+        try myTokenContract.transfer(sender, amountOfTokensToBuy) {
             emit MyTokensTransfered(amountOfTokensToBuy);
         } catch Error(string memory reason) {
             emit Log(reason);
@@ -217,24 +203,28 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, VRFConsum
     }
 
     function buyTokensForDAI(uint256 amountToBuy) public {
+        require(amountToBuy > 0, "Maybe you would like to buy something greater than 0?");
+
         bytes32 randomnessRequestId = getRandomNumber();
         addToQueue(2, amountToBuy, randomnessRequestId, "");
     }
 
     function _buyTokensForDAI(address sender, uint256 randomNumber, uint256 amount) public {
+        emit Log('buy_for_dai_2');
         IERC20 DAITokenContract = IERC20(DAITokenContractAddress);
         IERC20 myTokenContract = IERC20(myTokenContractAddress);
 
-        uint256 amountOfDAITokensToPay = amount;
+        uint256 amountOfTokensToBuy = amount * randomNumber / 10;
+
         uint256 allowance = DAITokenContract.allowance(sender, address(this));
 
-        if(amount > 0 || DAITokenContract.balanceOf(sender) >= amountOfDAITokensToPay || myTokenContract.balanceOf(address(this)) >= amount || allowance >= amount){
+        if(DAITokenContract.balanceOf(sender) <= amount || myTokenContract.balanceOf(address(this)) <= amountOfTokensToBuy || allowance <= amount){
             return;
         }
 
-        DAITokenContract.transferFrom(sender, address(this), amountOfDAITokensToPay);
-        myTokenContract.transfer(sender, amount);
-        emit MyTokensTransfered(amount);
+        DAITokenContract.transferFrom(sender, address(this), amount);
+        myTokenContract.transfer(sender, amountOfTokensToBuy);
+        emit MyTokensTransfered(amountOfTokensToBuy);
     }
 
     function getRandomNumber() public returns (bytes32 requestId) {
