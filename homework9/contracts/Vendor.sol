@@ -42,6 +42,7 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, VRFConsum
     event LogBytes(bytes message);
     event RandomNumberUpdated(uint256 number);
     event MyTokensTransfered(uint256 number);
+    event PriceUpdated(uint256 price);
 
     address aggregatorAddressFor_ETH_USD;
     address DAITokenContractAddress;
@@ -55,33 +56,17 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, VRFConsum
         uint256 eth_usd_price;
     }
 
-//    User[] public queue;
-    mapping(uint256 => Operation) public queue;
+    mapping(uint256 => Operation) queue;
     mapping(bytes32 => uint256) getRequestIndexFromRandomnessRequestId;
     mapping(bytes32 => uint256) getRequestIndexFromPriceRequestId;
 
-    bytes32 public keyHash;
-    uint256 public randomResult;
+    bytes32 private keyHash;
+    uint256 private randomResult;
 
-    event PriceUpdated(uint256 price);
-    uint256 public eth_usd_price;
+    uint256 private eth_usd_price;
     address private oracle;
     bytes32 private jobId;
     uint256 private chainlinkFee;
-
-    ////to remove
-    uint256 public test0;
-    uint256 public test1;
-    uint256 public test2;
-    uint256 public test3;
-    uint256 public test4;
-    uint256 public test5;
-    uint256 public test6;
-    uint256 public test7;
-
-
-
-    ///////
 
     constructor(address tokenContractAddress, address _DAITokenContractAddress)
     VRFConsumerBase(
@@ -210,7 +195,6 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, VRFConsum
     }
 
     function _buyTokensForDAI(address sender, uint256 randomNumber, uint256 amount) public {
-        emit Log('buy_for_dai_2');
         IERC20 DAITokenContract = IERC20(DAITokenContractAddress);
         IERC20 myTokenContract = IERC20(myTokenContractAddress);
 
