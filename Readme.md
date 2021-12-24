@@ -20,4 +20,7 @@
    +For the token you sell, create a pair on Uniswap v2 and add some liquidity(Token/ETH), so I will be able to sell your token for ETH
 6) No practical task.
 7) Add a restriction to your contract so only the owner of some NFT token can buy your tokens
-8) Make your contract upgradeable  
+8) Make your contract upgradeable
+9) No practical task.
+10) When user buys your token add getting of random number(Chainlink VRF) and use it as a multiplier when sending tokens to user. Multiplier could be from 0.5 to 3.0. Use this multiplier to multiply an amount of tokens to transfer to a user. The price of your token should be received not from priceFeed as before, but from any trusted API using chainlink oracles.
+  
