@@ -14,14 +14,14 @@ const daiTokenContractAddressKovan = '0x4f96fe3b7a6cf9725f59d353f723c1bdb64ca6aa
 module.exports = async function (deployer) {
   // await deployer.deploy(TestToken, 10000000000);
 
-  await deployer.deploy(Vendor, sgrnTokenContractAddressKovan, daiTokenContractAddressKovan);
+  await deployer.deploy(Vendor);
   const implementationInstance = await Vendor.deployed();
 
-  // const data = await implementationInstance.contract.methods
-  //   .initialize(sgrnTokenContractAddressKovan, daiTokenContractAddressKovan)
-  //   .encodeABI();
+  const data = await implementationInstance.contract.methods
+    .initialize(sgrnTokenContractAddressKovan, daiTokenContractAddressKovan)
+    .encodeABI();
 
-  // await deployer.deploy(Proxy, implementationInstance.address, data);
+  await deployer.deploy(Proxy, implementationInstance.address, data);
   //
   // await deployer.deploy(VendorV2);
 };

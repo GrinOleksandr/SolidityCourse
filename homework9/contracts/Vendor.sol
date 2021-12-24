@@ -1,14 +1,15 @@
-//example deployed at https://rinkeby.etherscan.io/address/0x7ea75b21D0A69cfad760d4fe95ab086C1508D2cd
-//example deployed at https://kovan.etherscan.io/address/0x18DAF3C01573B827A067BFd02349B0d5588242aB
+//example deployed at https://kovan.etherscan.io/address/0xa95473557Fabc556E1C0C84d7de1aF058aCeC886#code
+
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
-import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@chainlink/contracts/src/v0.8/ChainlinkClient.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/LinkTokenInterface.sol";
+import "@chainlink/contracts/src/v0.8/VRFRequestIDBase.sol";
 
 
 interface IERC20 {
@@ -35,8 +36,64 @@ interface studentsInterface {
     function getStudentsList() external view returns (string[] memory studentsList);
 }
 
+abstract contract VRFConsumerBase is VRFRequestIDBase {
+    function fulfillRandomness(
+        bytes32 requestId,
+        uint256 randomness
+    )
+    internal
+    virtual;
 
-contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, VRFConsumerBase, ChainlinkClient    {
+    uint256 constant private USER_SEED_PLACEHOLDER = 0;
+    function requestRandomness(
+        bytes32 _keyHash,
+        uint256 _fee
+    )
+    internal
+    returns (
+        bytes32 requestId
+    )
+    {
+        LINK.transferAndCall(vrfCoordinator, _fee, abi.encode(_keyHash, USER_SEED_PLACEHOLDER));
+        uint256 vRFSeed  = makeVRFInputSeed(_keyHash, USER_SEED_PLACEHOLDER, address(this), nonces[_keyHash]);
+        nonces[_keyHash] = nonces[_keyHash] + 1;
+        return makeRequestId(_keyHash, vRFSeed);
+    }
+
+    LinkTokenInterface internal LINK;
+    address private vrfCoordinator;
+
+    mapping(bytes32 /* keyHash */ => uint256 /* nonce */) private nonces;
+
+    constructor(
+        address _vrfCoordinator,
+        address _link
+    ) {
+        vrfCoordinator = _vrfCoordinator;
+        LINK = LinkTokenInterface(_link);
+    }
+
+    function initializeVRFConsumerBase (
+        address _vrfCoordinator,
+        address _link
+    ) internal {
+        vrfCoordinator = _vrfCoordinator;
+        LINK = LinkTokenInterface(_link);
+    }
+
+    function rawFulfillRandomness(
+        bytes32 requestId,
+        uint256 randomness
+    )
+    external
+    {
+        require(msg.sender == vrfCoordinator, "Only VRFCoordinator can fulfill");
+        fulfillRandomness(requestId, randomness);
+    }
+}
+
+
+contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, ChainlinkClient, VRFConsumerBase    {
     using Chainlink for Chainlink.Request;
     event Log(string message);
     event LogBytes(bytes message);
@@ -68,11 +125,15 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, VRFConsum
     bytes32 private jobId;
     uint256 private chainlinkFee;
 
-    constructor(address tokenContractAddress, address _DAITokenContractAddress)
+    constructor()
     VRFConsumerBase(
         0xdD3782915140c8f3b190B5D67eAc6dc5760C46E9, // VRF Coordinator
         0xa36085F69e2889c224210F603D836748e7dC0088  // LINK Token
     ){
+    }
+
+    function initialize(address tokenContractAddress, address _DAITokenContractAddress)  public initializer
+    {
         DAITokenContractAddress = _DAITokenContractAddress;
         myTokenContractAddress = tokenContractAddress;
         keyHash = 0x6c3699283bda56ad74f6b855546325b68d482e983852a7a82979cc4807b641f4;
@@ -81,21 +142,14 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, VRFConsum
         oracle = 0xc57B33452b4F7BB189bB5AfaE9cc4aBa1f7a4FD8;
         jobId = "83ba9ddc927946198fbd0bf1bd8a8c25";
         _transferOwnership(msg.sender);
+
+        initializeVRFConsumerBase(
+        0xdD3782915140c8f3b190B5D67eAc6dc5760C46E9, // VRF Coordinator
+        0xa36085F69e2889c224210F603D836748e7dC0088  // LINK Token
+        );
     }
 
-//    function initialize(address tokenContractAddress, address _DAITokenContractAddress)  public initializer
-//    {
-//        DAITokenContractAddress = _DAITokenContractAddress;
-//        myTokenContractAddress = tokenContractAddress;
-//        keyHash = 0x6c3699283bda56ad74f6b855546325b68d482e983852a7a82979cc4807b641f4;
-//        chainlinkFee = 0.1 * 10 ** 18; // 0.1 LINK (Varies by network)
-//        setPublicChainlinkToken();
-//        oracle = 0xc57B33452b4F7BB189bB5AfaE9cc4aBa1f7a4FD8;
-//        jobId = "83ba9ddc927946198fbd0bf1bd8a8c25";
-//        _transferOwnership(msg.sender);
-//    }
-
-    function addToQueue (uint8 _operationTypeId, uint256 _amount, bytes32 _randomnessRequestId, bytes32 _priceRequestId) public {
+    function addToQueue (uint8 _operationTypeId, uint256 _amount, bytes32 _randomnessRequestId, bytes32 _priceRequestId) internal {
         Operation memory newOperation = Operation(msg.sender, _operationTypeId, _amount, 0, 0);
         queue[requestIndex] = newOperation;
         getRequestIndexFromRandomnessRequestId[_randomnessRequestId] = requestIndex;
@@ -194,7 +248,7 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, VRFConsum
         addToQueue(2, amountToBuy, randomnessRequestId, "");
     }
 
-    function _buyTokensForDAI(address sender, uint256 randomNumber, uint256 amount) public {
+    function _buyTokensForDAI(address sender, uint256 randomNumber, uint256 amount) internal {
         IERC20 DAITokenContract = IERC20(DAITokenContractAddress);
         IERC20 myTokenContract = IERC20(myTokenContractAddress);
 
@@ -226,9 +280,5 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, VRFConsum
         queue[index].randomNumber = randomResult;
 
         processBuyRequest(index);
-    }
-
-    function myAddress() public view returns(address){
-        return address(this);
     }
 }
