@@ -220,8 +220,405 @@
     }
   ]
 
-  const minimalForwarderAddr = '0x039a437431c2fEC0903e67112973787D8046e5AD'
-  const vendorAddress = '0x6D282e659a34CFF66298251bA600A66C127d2e79';
+  const vendorAbi = [
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "from",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "to",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "value",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "gas",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "nonce",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes",
+              "name": "data",
+              "type": "bytes"
+            }
+          ],
+          "internalType": "struct MinimalForwarder.ForwardRequest",
+          "name": "req",
+          "type": "tuple"
+        },
+        {
+          "internalType": "bytes",
+          "name": "signature",
+          "type": "bytes"
+        }
+      ],
+      "name": "buyTokensForDAIOnBehalf",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        },
+        {
+          "internalType": "bytes",
+          "name": "",
+          "type": "bytes"
+        }
+      ],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "from",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "to",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "value",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "gas",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "nonce",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes",
+              "name": "data",
+              "type": "bytes"
+            }
+          ],
+          "internalType": "struct MinimalForwarder.ForwardRequest",
+          "name": "req",
+          "type": "tuple"
+        },
+        {
+          "internalType": "bytes",
+          "name": "signature",
+          "type": "bytes"
+        }
+      ],
+      "name": "execute",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        },
+        {
+          "internalType": "bytes",
+          "name": "",
+          "type": "bytes"
+        }
+      ],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "from",
+          "type": "address"
+        }
+      ],
+      "name": "getNonce",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "from",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "to",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "value",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "gas",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "nonce",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes",
+              "name": "data",
+              "type": "bytes"
+            }
+          ],
+          "internalType": "struct MinimalForwarder.ForwardRequest",
+          "name": "req",
+          "type": "tuple"
+        },
+        {
+          "internalType": "bytes",
+          "name": "signature",
+          "type": "bytes"
+        }
+      ],
+      "name": "verify",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [{
+        "internalType": "address",
+        "name": "tokenContractAddress",
+        "type": "address"
+      }, {
+        "internalType": "address",
+        "name": "_DAITokenContractAddress",
+        "type": "address"
+      }],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    }, {
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "internalType": "address",
+        "name": "previousAdmin",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "internalType": "address",
+        "name": "newAdmin",
+        "type": "address"
+      }],
+      "name": "AdminChanged",
+      "type": "event"
+    }, {
+      "anonymous": false,
+      "inputs": [{
+        "indexed": true,
+        "internalType": "address",
+        "name": "beacon",
+        "type": "address"
+      }],
+      "name": "BeaconUpgraded",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "internalType": "string",
+        "name": "message",
+        "type": "string"
+      }],
+      "name": "Log",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "message",
+        "type": "bytes"
+      }],
+      "name": "LogBytes",
+      "type": "event"
+    }, {
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "number",
+        "type": "uint256"
+      }],
+      "name": "MyTokensTransfered",
+      "type": "event"
+    }, {
+      "anonymous": false,
+      "inputs": [{
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      }, {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }],
+      "name": "OwnershipTransferred",
+      "type": "event"
+    }, {
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "price",
+        "type": "uint256"
+      }],
+      "name": "PriceUpdated",
+      "type": "event"
+    }, {
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "number",
+        "type": "uint256"
+      }],
+      "name": "RandomNumberUpdated",
+      "type": "event"
+    }, {
+      "anonymous": false,
+      "inputs": [{
+        "indexed": true,
+        "internalType": "address",
+        "name": "implementation",
+        "type": "address"
+      }],
+      "name": "Upgraded",
+      "type": "event"
+    }, {
+      "inputs": [],
+      "name": "buyTokens",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    }, {
+      "inputs": [{
+        "internalType": "uint256",
+        "name": "amountToBuy",
+        "type": "uint256"
+      }],
+      "name": "buyTokensForDAI",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    // {
+    //   "inputs": [{
+    //     "internalType": "uint256",
+    //     "name": "amountToBuy",
+    //     "type": "uint256"
+    //   },
+    //   //   {
+    //   //   "internalType": "address",
+    //   //   "name": "buyer",
+    //   //   "type": "address"
+    //   // }
+    //   ],
+    //   "name": "buyTokensForDAIOnBehalf",
+    //   "outputs": [],
+    //   "stateMutability": "nonpayable",
+    //   "type": "function"
+    // }  ,
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [{
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }],
+      "stateMutability": "view",
+      "type": "function"
+    }, {
+      "inputs": [],
+      "name": "renounceOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }, {
+      "inputs": [{
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }, {
+      "inputs": [{
+        "internalType": "address",
+        "name": "newImplementation",
+        "type": "address"
+      }],
+      "name": "upgradeTo",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }, {
+      "inputs": [{
+        "internalType": "address",
+        "name": "newImplementation",
+        "type": "address"
+      }, {
+        "internalType": "bytes",
+        "name": "data",
+        "type": "bytes"
+      }],
+      "name": "upgradeToAndCall",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    }];
+
+  const vendorAddress = '0xE5d81078Dfd342ecA344C6237C9d3B1B22835FaD';
 
   const ethereumButton = window.document.getElementById("enableEthereumButton")
   const signButton = window.document.getElementById("signDataButton")
@@ -262,7 +659,7 @@
   genMintMetaTxButton.addEventListener('click', async () => {
     event.preventDefault()
 
-    const req = await genMintNFTMetaTx(minimalForwarderAddr, vendorAddress)
+    const req = await genMintNFTMetaTx(vendorAddress)
     window.document.getElementById('metaTxFrom').value = req.from
     window.document.getElementById('metaTxTo').value = req.to
     window.document.getElementById('metaTxValue').value = req.value
@@ -281,23 +678,22 @@
     event.preventDefault()
     const req = getReqFromForm()
     const signature = window.document.getElementById('metaTxSignature').value
-    const verification = await verifyMetaTx(minimalForwarderAddr, req, signature)
+    const verification = await verifyMetaTx(vendorAddress, req, signature)
     if ( verification !== true) {
       alert(`meta transaction is invalid!! ${verification}`)
       return
     }
 
-    await executeMetaTx(minimalForwarderAddr, req, signature)
+    await executeMetaTx(vendorAddress, req, signature)
   })
 </script>
 
 <script type="text/javascript">
 
-  const genMintNFTMetaTx = async (minimalForwarderAddr, vendorAddress) => {
+  const genMintNFTMetaTx = async (vendorAddress) => {
     var web3 = new Web3(ethereum)
     const bn1e18 = web3.utils.toBN(1e18);
-    console.log('scv_numbertobuy', web3.utils.toBN(17).mul(bn1e18))
-    const vendorAbi = [{"inputs":[{"internalType":"address","name":"tokenContractAddress","type":"address"},{"internalType":"address","name":"_DAITokenContractAddress","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"previousAdmin","type":"address"},{"indexed":false,"internalType":"address","name":"newAdmin","type":"address"}],"name":"AdminChanged","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"beacon","type":"address"}],"name":"BeaconUpgraded","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"string","name":"message","type":"string"}],"name":"Log","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"bytes","name":"message","type":"bytes"}],"name":"LogBytes","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"number","type":"uint256"}],"name":"MyTokensTransfered","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"price","type":"uint256"}],"name":"PriceUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"number","type":"uint256"}],"name":"RandomNumberUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"implementation","type":"address"}],"name":"Upgraded","type":"event"},{"inputs":[],"name":"buyTokens","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[{"internalType":"uint256","name":"amountToBuy","type":"uint256"}],"name":"buyTokensForDAI","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"renounceOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"newImplementation","type":"address"}],"name":"upgradeTo","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"newImplementation","type":"address"},{"internalType":"bytes","name":"data","type":"bytes"}],"name":"upgradeToAndCall","outputs":[],"stateMutability":"payable","type":"function"}];
+
     // const vendorAddress = '0x5e6EefBCda5869802E9038011344d36C65d6C47E';
     var vendorContract = new web3.eth.Contract(vendorAbi, vendorAddress)
     const from = ethereum.selectedAddress
@@ -309,16 +705,16 @@
       to: vendorAddress,
       value: '0',
       gas: 1000000,
-      nonce: await getMetaTxNonce(minimalForwarderAddr),
+      nonce: await getMetaTxNonce(),
       data: callData,
     }
   }
 
-  const getMetaTxNonce = async (minimalForwarderAddr) => {
+  const getMetaTxNonce = async () => {
     var web3 = new Web3(ethereum)
 
-    var metaTxContract = new web3.eth.Contract(MetaTxABI, minimalForwarderAddr)
-    return await metaTxContract.methods.getNonce(ethereum.selectedAddress).call()
+    var vendorContract = new web3.eth.Contract(vendorAbi, vendorAddress)
+    return await vendorContract.methods.getNonce(ethereum.selectedAddress).call()
   }
 
   const signMetaTx = async (req) => {
@@ -329,7 +725,7 @@
         // Give a user friendly name to the specific contract you are signing for.
         name: 'MinimalForwarder',
         // If name isn't enough add verifying contract to make sure you are establishing contracts with the proper entity
-        verifyingContract: minimalForwarderAddr,
+        verifyingContract: vendorAddress,
         // Just let's you know the latest version. Definitely make sure the field name is correct.
         version: '0.0.1',
       },
@@ -397,47 +793,23 @@
         params,
         from,
       })
-    ///////////////////////////////////
-    // var sigUtil = require('eth-sig-util')
-    //
-    // const recovered = sigUtil.recoverTypedSignature_v4({
-    //   data: JSON.parse(msgParams),
-    //   sig: signature.result,
-    // });
-    //
-    // if (
-    //         ethereum.toChecksumAddress(recovered) === ethereum.toChecksumAddress(from)
-    // ) {
-    //   alert('Successfully recovered signer as ' + from);
-    // } else {
-    //   alert(
-    //           'Failed to verify signer when comparing ' + result + ' to ' + from
-    //   );
-    // }
-
-
-
-
-    //////////////////////////////////
-
-
 
     window.document.getElementById('metaTxSignature').value = signature
     return signature
   }
 
-  const verifyMetaTx = async (minimalForwarderAddr, req, signature) => {
+  const verifyMetaTx = async (vendorAddress, req, signature) => {
     var web3 = new Web3(ethereum)
 
-    var metaTxContract = new web3.eth.Contract(MetaTxABI, minimalForwarderAddr)
-    return await metaTxContract.methods.verify(req, signature).call()
+    var vendorContract = new web3.eth.Contract(vendorAbi, vendorAddress)
+    return await vendorContract.methods.verify(req, signature).call()
   }
 
-  const executeMetaTx = async (minimalForwarderAddr, req, signature) => {
+  const executeMetaTx = async (vendorAddress, req, signature) => {
     var web3 = new Web3(ethereum)
 
-    var metaTxContract = new web3.eth.Contract(MetaTxABI, minimalForwarderAddr)
-    return await metaTxContract.methods.execute(req, signature).send({from: ethereum.selectedAddress})
+    var vendorContract = new web3.eth.Contract(vendorAbi, vendorAddress)
+    return await vendorContract.methods.buyTokensForDAIOnBehalf(req, signature).send({from: ethereum.selectedAddress})
   }
 
   const getReqFromForm = () => {

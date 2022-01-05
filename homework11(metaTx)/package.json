@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "node ./demo/metaTx/index.js",
+    "dev": "node ./scripts/metaTx/index.js",
     "migrate-rinkeby": "truffle migrate --network rinkeby --reset --compile-all -f 2 --to 2",
-    "verify-rinkeby": "truffle run verify  Vendor MinimalForwarder --network rinkeby",
+    "verify-rinkeby": "truffle run verify  Vendor --network rinkeby",
     "test": "npx hardhat test ./test/Vendor.test.ts",
     "coverage": "npx hardhat coverage"
   },
@@ -38,5 +38,10 @@
     "truffle-plugin-verify": "^0.5.18",
     "ts-node": "^10.4.0",
     "typescript": "^4.5.2"
+  },
+  "dependencies": {
+    "@opengsn/contracts": "^2.2.4",
+    "openzeppelin-solidity": "^4.4.1",
+    "process-nextick-args": "^1.0.7"
   }
 }

@@ -7,6 +7,7 @@ import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@opengsn/contracts/src/BaseRelayRecipient.sol";
 
 interface IERC20 {
     function totalSupply() external view returns (uint256);
@@ -32,7 +33,7 @@ interface studentsInterface {
     function getStudentsList() external view returns (string[] memory studentsList);
 }
 
-contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable    {
+contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, BaseRelayRecipient    {
     event Log(string message);
     event LogBytes(bytes message);
     event RandomNumberUpdated(uint256 number);
@@ -44,16 +45,41 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable    {
     address DAITokenContractAddress;
     address myTokenContractAddress;
 
-    constructor (address tokenContractAddress, address _DAITokenContractAddress)  public initializer
+    constructor (address tokenContractAddress, address _DAITokenContractAddress, address trustedForwarder)  public initializer
     {
         DAITokenContractAddress = _DAITokenContractAddress;
         myTokenContractAddress = tokenContractAddress;
         aggregatorAddressFor_ETH_USD = 0x8A753747A1Fa494EC906cE90E9f37563A8AF630e;
         _transferOwnership(msg.sender);
+        _setTrustedForwarder(trustedForwarder);
     }
 
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+    function versionRecipient() external override view returns (string memory){
+        return 'V1';
+    }
+
+    function _msgSender() internal override(ContextUpgradeable,BaseRelayRecipient) view returns (address ret) {
+        if (msg.data.length >= 20 && isTrustedForwarder(msg.sender)) {
+            // At this point we know that the sender is a trusted forwarder,
+            // so we trust that the last bytes of msg.data are the verified sender address.
+            // extract sender address from the end of msg.data
+            assembly {
+                ret := shr(96,calldataload(sub(calldatasize(),20)))
+            }
+        } else {
+            ret = msg.sender;
+        }
+    }
+
+    function _msgData() internal override(ContextUpgradeable,BaseRelayRecipient) view returns (bytes calldata ret) {
+        if (msg.data.length >= 20 && isTrustedForwarder(msg.sender)) {
+            return msg.data[0:msg.data.length-20];
+        } else {
+            return msg.data;
+        }
+    }
 
     function buyTokens() public payable {
         IERC20 myTokenContract = IERC20(myTokenContractAddress);
@@ -79,19 +105,8 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable    {
         emit Log('tokens successfully bought');
         IERC20 DAITokenContract = IERC20(DAITokenContractAddress);
         IERC20 myTokenContract = IERC20(myTokenContractAddress);
-        emit BuyingTokens(msg.sender, amountToBuy,DAITokenContract.balanceOf(msg.sender),myTokenContract.balanceOf(address(this)), DAITokenContract.allowance(msg.sender, address(this)));
-
-        //        uint256 amountOfDAITokensToPay = amountToBuy;
-
-        //        require(DAITokenContract.balanceOf(msg.sender) >= amountOfDAITokensToPay, "Sorry, you do not have enough DAI-tokens for swap");
-        //        require(myTokenContract.balanceOf(address(this)) >= amountToBuy, "Sorry, there is not enough tokens on my balance");
-
-        //        uint256 allowance = DAITokenContract.allowance(msg.sender, address(this));
-        //        require(allowance >= amountToBuy, "Check the token allowance please");
-
-        //        DAITokenContract.transferFrom(msg.sender, address(this), amountToBuy);
-        //        myTokenContract.transfer(msg.sender, amountToBuy);
-
+        address sender = _msgSender();
+        emit BuyingTokens(sender, amountToBuy,DAITokenContract.balanceOf(msg.sender),myTokenContract.balanceOf(address(this)), DAITokenContract.allowance(msg.sender, address(this)));
     }
 
     function getLatestPrice(address aggregatorAddress) internal returns (uint256){

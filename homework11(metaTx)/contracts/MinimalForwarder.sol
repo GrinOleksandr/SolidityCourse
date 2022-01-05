@@ -49,39 +49,11 @@ contract MinimalForwarder is EIP712 {
     }
 
     function verify(ForwardRequest calldata req, bytes calldata signature) public  returns (bool) {
-        emit Log('verifying');
         address signer = _hashTypedDataV4(
             keccak256(abi.encode(_TYPEHASH, req.from, req.to, req.value, req.gas, req.nonce, keccak256(req.data)))
         ).recover(signature);
-        emit test1(_nonces[req.from]);
-        emit test2(req.nonce);
-        emit test3(signer);
-        emit test4(req.from);
+
         return _nonces[req.from] == req.nonce && signer == req.from;
-    }
-
-    function verify2(ForwardRequest calldata req, bytes calldata signature) public  returns (bool) {
-        emit Log('verifying');
-        address signer = _hashTypedDataV4(
-            keccak256(abi.encode(_TYPEHASH, req.from, req.to, req.value, req.gas, req.nonce, keccak256(req.data)))
-        ).recover(signature);
-        emit test1(_nonces[req.from]);
-        emit test2(req.nonce);
-        emit test3(signer);
-        emit test4(req.from);
-        return signer == req.from;
-    }
-
-    function verify3(ForwardRequest calldata req, bytes calldata signature) public  returns (address) {
-        emit Log('verifying');
-        address signer = _hashTypedDataV4(
-            keccak256(abi.encode(_TYPEHASH, req.from, req.to, req.value, req.gas, req.nonce, keccak256(req.data)))
-        ).recover(signature);
-        emit test1(_nonces[req.from]);
-        emit test2(req.nonce);
-        emit test3(signer);
-        emit test4(req.from);
-        return signer;
     }
 
     function execute(ForwardRequest calldata req, bytes calldata signature)
