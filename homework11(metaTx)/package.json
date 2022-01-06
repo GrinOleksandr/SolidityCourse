@@ -7,6 +7,8 @@
     "dev": "node ./scripts/metaTx/index.js",
     "migrate-rinkeby": "truffle migrate --network rinkeby --reset --compile-all -f 2 --to 2",
     "verify-rinkeby": "truffle run verify  Vendor --network rinkeby",
+    "migrate-kovan": "truffle migrate --network kovan --reset --compile-all -f 2 --to 2",
+    "verify-kovan": "truffle run verify Vendor ERC1967Proxy --network kovan",
     "test": "npx hardhat test ./test/Vendor.test.ts",
     "coverage": "npx hardhat coverage"
   },

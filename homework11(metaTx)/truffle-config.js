@@ -64,6 +64,17 @@ module.exports = {
       skipDryRun: true,
       websockets: true,
     },
+    kovan: {
+      provider: () =>
+        new HDWalletProvider([process.env.PRIVATE_KEY_TESTNET], 'wss://kovan.infura.io/ws/v3/' + infuraKey),
+      network_id: 42, // Ropsten's id
+      gas: 10000000, // Ropsten has a lower block limit than mainnet   // # of confs to wait between deployments. (default: 0)
+      timeoutBlocks: 200,
+      gasPrice: 20000000000,
+      networkCheckTimeout: 1000000, // # of blocks before a deployment times out  (minimum/default: 50)
+      skipDryRun: true,
+      websockets: true,
+    },
 
     // Another network with more advanced options...
     // advanced: {

@@ -30,14 +30,19 @@
         from<input id="metaTxFrom" value="0x" />
       </span>
     </div>
+<!--    <div>-->
+<!--      <span>-->
+<!--        to<input id="metaTxTo" value="0x" />-->
+<!--      </span>-->
+<!--    </div>-->
     <div>
       <span>
-        to<input id="metaTxTo" value="0x" />
+        value<input id="metaTxValue" value="0" />
       </span>
     </div>
     <div>
       <span>
-        value<input id="metaTxValue" value="0" />
+        Amount of tokens to buy<input id="metaTxAmountToBuy" value="0x" /> (for BuyTokensForDAI only!!!)
       </span>
     </div>
     <div>
@@ -91,11 +96,11 @@
               "name": "from",
               "type": "address"
             },
-            {
-              "internalType": "address",
-              "name": "to",
-              "type": "address"
-            },
+            // {
+            //   "internalType": "address",
+            //   "name": "to",
+            //   "type": "address"
+            // },
             {
               "internalType": "uint256",
               "name": "value",
@@ -171,11 +176,11 @@
               "name": "from",
               "type": "address"
             },
-            {
-              "internalType": "address",
-              "name": "to",
-              "type": "address"
-            },
+            // {
+            //   "internalType": "address",
+            //   "name": "to",
+            //   "type": "address"
+            // },
             {
               "internalType": "uint256",
               "name": "value",
@@ -220,8 +225,8 @@
     }
   ]
 
-  const minimalForwarderAddr = '0x039a437431c2fEC0903e67112973787D8046e5AD'
-  const vendorAddress = '0x6D282e659a34CFF66298251bA600A66C127d2e79';
+  const minimalForwarderAddr = '0x58F56eFb1Bc4D0c566c493E019EE7dDcc987f720'
+  const vendorAddress = '0x58F56eFb1Bc4D0c566c493E019EE7dDcc987f720';
 
   const ethereumButton = window.document.getElementById("enableEthereumButton")
   const signButton = window.document.getElementById("signDataButton")
@@ -237,10 +242,10 @@
       method: 'eth_requestAccounts'
     }).then(() => {
       console.log('chainId: ', ethereum.chainId)
-      if (ethereum.chainId != '0x4') {
+      if (ethereum.chainId != '0x42') { //0x42 for Kovan, 0x4 for Rinkeby!
         ethereum.request({
           method: 'wallet_switchEthereumChain',
-          params: [{ chainId: '0x4' }],
+          params: [{ chainId: '0x42' }],
         })
       }
     })
@@ -262,9 +267,10 @@
   genMintMetaTxButton.addEventListener('click', async () => {
     event.preventDefault()
 
-    const req = await genMintNFTMetaTx(minimalForwarderAddr, vendorAddress)
+    const req = await genBuyTokensForDaiMetaTx(minimalForwarderAddr, vendorAddress, 17)
     window.document.getElementById('metaTxFrom').value = req.from
-    window.document.getElementById('metaTxTo').value = req.to
+    // window.document.getElementById('metaTxAmountToBuy').value = req.amountToBuy
+    // window.document.getElementById('metaTxTo').value = req.to
     window.document.getElementById('metaTxValue').value = req.value
     window.document.getElementById('metaTxGas').value = req.gas
     window.document.getElementById('metaTxNonce').value = req.nonce
@@ -280,6 +286,7 @@
   executeMetaTxButton.addEventListener('click', async (event) => {
     event.preventDefault()
     const req = getReqFromForm()
+    console.log('scv_req', req)
     const signature = window.document.getElementById('metaTxSignature').value
     const verification = await verifyMetaTx(minimalForwarderAddr, req, signature)
     if ( verification !== true) {
@@ -293,22 +300,22 @@
 
 <script type="text/javascript">
 
-  const genMintNFTMetaTx = async (minimalForwarderAddr, vendorAddress) => {
+  const genBuyTokensForDaiMetaTx = async (minimalForwarderAddr, vendorAddress, amountToBuy) => {
     var web3 = new Web3(ethereum)
     const bn1e18 = web3.utils.toBN(1e18);
-    console.log('scv_numbertobuy', web3.utils.toBN(17).mul(bn1e18))
-    const vendorAbi = [{"inputs":[{"internalType":"address","name":"tokenContractAddress","type":"address"},{"internalType":"address","name":"_DAITokenContractAddress","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"previousAdmin","type":"address"},{"indexed":false,"internalType":"address","name":"newAdmin","type":"address"}],"name":"AdminChanged","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"beacon","type":"address"}],"name":"BeaconUpgraded","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"string","name":"message","type":"string"}],"name":"Log","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"bytes","name":"message","type":"bytes"}],"name":"LogBytes","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"number","type":"uint256"}],"name":"MyTokensTransfered","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"price","type":"uint256"}],"name":"PriceUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"number","type":"uint256"}],"name":"RandomNumberUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"implementation","type":"address"}],"name":"Upgraded","type":"event"},{"inputs":[],"name":"buyTokens","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[{"internalType":"uint256","name":"amountToBuy","type":"uint256"}],"name":"buyTokensForDAI","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"renounceOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"newImplementation","type":"address"}],"name":"upgradeTo","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"newImplementation","type":"address"},{"internalType":"bytes","name":"data","type":"bytes"}],"name":"upgradeToAndCall","outputs":[],"stateMutability":"payable","type":"function"}];
-    // const vendorAddress = '0x5e6EefBCda5869802E9038011344d36C65d6C47E';
+    const vendorAbi = [{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"previousAdmin","type":"address"},{"indexed":false,"internalType":"address","name":"newAdmin","type":"address"}],"name":"AdminChanged","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"beacon","type":"address"}],"name":"BeaconUpgraded","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"bytes32","name":"id","type":"bytes32"}],"name":"ChainlinkCancelled","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"bytes32","name":"id","type":"bytes32"}],"name":"ChainlinkFulfilled","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"bytes32","name":"id","type":"bytes32"}],"name":"ChainlinkRequested","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"string","name":"message","type":"string"}],"name":"Log","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"bytes","name":"message","type":"bytes"}],"name":"LogBytes","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"number","type":"uint256"}],"name":"MyTokensTransfered","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"price","type":"uint256"}],"name":"PriceUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"number","type":"uint256"}],"name":"RandomNumberUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"buyer","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"TokensBought","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"implementation","type":"address"}],"name":"Upgraded","type":"event"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"_nonces","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"buyTokens","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[{"internalType":"uint256","name":"amountToBuy","type":"uint256"}],"name":"buyTokensForDAI","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"amountToBuy","type":"uint256"}],"name":"buyTokensForDAIOnBehalfOf","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"buyTokensOnBehalfOf","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[{"components":[{"internalType":"address","name":"from","type":"address"},{"internalType":"uint256","name":"value","type":"uint256"},{"internalType":"uint256","name":"gas","type":"uint256"},{"internalType":"uint256","name":"nonce","type":"uint256"},{"internalType":"bytes","name":"data","type":"bytes"}],"internalType":"struct MinimalForwarder.ForwardRequest","name":"req","type":"tuple"},{"internalType":"bytes","name":"signature","type":"bytes"}],"name":"execute","outputs":[{"internalType":"bool","name":"","type":"bool"},{"internalType":"bytes","name":"","type":"bytes"}],"stateMutability":"payable","type":"function"},{"inputs":[{"internalType":"bytes32","name":"_requestId","type":"bytes32"},{"internalType":"uint256","name":"_eth_usd_price","type":"uint256"}],"name":"fulfill","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"from","type":"address"}],"name":"getNonce","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getRandomNumber","outputs":[{"internalType":"bytes32","name":"requestId","type":"bytes32"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"tokenContractAddress","type":"address"},{"internalType":"address","name":"_DAITokenContractAddress","type":"address"}],"name":"initialize","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"forwarder","type":"address"}],"name":"isTrustedForwarder","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"bytes32","name":"requestId","type":"bytes32"},{"internalType":"uint256","name":"randomness","type":"uint256"}],"name":"rawFulfillRandomness","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"renounceOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"request_ETH_USD_price","outputs":[{"internalType":"bytes32","name":"requestId","type":"bytes32"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"trustedForwarder","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"newImplementation","type":"address"}],"name":"upgradeTo","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"newImplementation","type":"address"},{"internalType":"bytes","name":"data","type":"bytes"}],"name":"upgradeToAndCall","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[{"components":[{"internalType":"address","name":"from","type":"address"},{"internalType":"uint256","name":"value","type":"uint256"},{"internalType":"uint256","name":"gas","type":"uint256"},{"internalType":"uint256","name":"nonce","type":"uint256"},{"internalType":"bytes","name":"data","type":"bytes"}],"internalType":"struct MinimalForwarder.ForwardRequest","name":"req","type":"tuple"},{"internalType":"bytes","name":"signature","type":"bytes"}],"name":"verify","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"versionRecipient","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"}];
+
     var vendorContract = new web3.eth.Contract(vendorAbi, vendorAddress)
     const from = ethereum.selectedAddress
-    const callData = vendorContract.methods.buyTokensForDAI(web3.utils.toBN(17).mul(bn1e18)).encodeABI()
-    // const gas = await vendorContract.methods.buyTokensForDAI(web3.utils.toBN(17).mul(bn1e18)).estimateGas({from: from})
+    const callData = vendorContract.methods.buyTokensForDAIOnBehalfOf(web3.utils.toBN(amountToBuy).mul(bn1e18)).encodeABI()
+    // const gas = await vendorContract.methods.buyTokensForDAIOnBehalfOf(web3.utils.toBN(amountToBuy).mul(bn1e18)).estimateGas({from: from})
 
     return {
-      from: from,
-      to: vendorAddress,
+      from,
+      // amountToBuy,
+      // to: vendorAddress,,
       value: '0',
-      gas: 1000000,
+      gas: 10000000,
       nonce: await getMetaTxNonce(minimalForwarderAddr),
       data: callData,
     }
@@ -362,10 +369,10 @@
           name: 'from',
           type: 'address'
         },
-          {
-            name: 'to',
-            type: 'address'
-          },
+          // {
+          //   name: 'to',
+          //   type: 'address'
+          // },
           {
             name: 'value',
             type: 'uint256'
@@ -397,6 +404,7 @@
         params,
         from,
       })
+    console.log('scv_signature', signature)
     ///////////////////////////////////
     // var sigUtil = require('eth-sig-util')
     //
@@ -434,6 +442,7 @@
   }
 
   const executeMetaTx = async (minimalForwarderAddr, req, signature) => {
+    console.log('scv_executing')
     var web3 = new Web3(ethereum)
 
     var metaTxContract = new web3.eth.Contract(MetaTxABI, minimalForwarderAddr)
@@ -443,7 +452,8 @@
   const getReqFromForm = () => {
     return {
       from: window.document.getElementById('metaTxFrom').value,
-      to: window.document.getElementById('metaTxTo').value,
+      // amountToBuy: window.document.getElementById('metaTxAmountToBuy').value,
+      // to: window.document.getElementById('metaTxTo').value,
       value: window.document.getElementById('metaTxValue').value,
       gas: window.document.getElementById('metaTxGas').value,
       nonce: window.document.getElementById('metaTxNonce').value,
