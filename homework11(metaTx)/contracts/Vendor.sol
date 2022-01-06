@@ -188,24 +188,6 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, Chainlink
         __EIP712_init("MinimalForwarder", "0.0.1");
     }
 
-    function _msgSender() internal override(ContextUpgradeable,BaseRelayRecipient) view returns (address ret) {
-        if (msg.data.length >= 20) {
-            assembly {
-                ret := shr(96,calldataload(sub(calldatasize(),20)))
-            }
-        } else {
-            ret = msg.sender;
-        }
-    }
-
-    function _msgData() internal override(ContextUpgradeable,BaseRelayRecipient) view returns (bytes calldata ret) {
-        if (msg.data.length >= 20) {
-            return msg.data[0:msg.data.length-20];
-        } else {
-            return msg.data;
-        }
-    }
-
     function addToQueue (uint8 _operationTypeId,address sender, uint256 _amount, bytes32 _randomnessRequestId, bytes32 _priceRequestId) internal {
         Operation memory newOperation = Operation(sender, _operationTypeId, _amount, 0, 0);
         queue[requestIndex] = newOperation;
@@ -252,12 +234,6 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, Chainlink
         processBuyRequest(index);
     }
 
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
-
-    function versionRecipient() external override view returns (string memory){
-        return 'V1';
-    }
-
     function buyTokens() public payable {
         bytes32 priceRequestId = request_ETH_USD_price();
         bytes32 randomnessRequestId = getRandomNumber();
@@ -301,6 +277,7 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, Chainlink
 
         try myTokenContract.transfer(sender, amountOfTokensToBuy) {
             emit MyTokensTransfered(amountOfTokensToBuy);
+            emit TokensBought(sender, amountOfTokensToBuy);
         } catch Error(string memory reason) {
             emit Log(reason);
         } catch (bytes memory reason) {
@@ -337,6 +314,7 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, Chainlink
         DAITokenContract.transferFrom(sender, address(this), amount);
         myTokenContract.transfer(sender, amountOfTokensToBuy);
         emit MyTokensTransfered(amountOfTokensToBuy);
+        emit TokensBought(sender, amountOfTokensToBuy);
     }
 
     function getRandomNumber() public returns (bytes32 requestId) {
@@ -354,5 +332,29 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, Chainlink
         queue[index].randomNumber = randomResult;
 
         processBuyRequest(index);
+    }
+
+    function _msgSender() internal override(ContextUpgradeable,BaseRelayRecipient) view returns (address ret) {
+        if (msg.data.length >= 20) {
+            assembly {
+                ret := shr(96,calldataload(sub(calldatasize(),20)))
+            }
+        } else {
+            ret = msg.sender;
+        }
+    }
+
+    function _msgData() internal override(ContextUpgradeable,BaseRelayRecipient) view returns (bytes calldata ret) {
+        if (msg.data.length >= 20) {
+            return msg.data[0:msg.data.length-20];
+        } else {
+            return msg.data;
+        }
+    }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+
+    function versionRecipient() external override view returns (string memory){
+        return 'V1';
     }
 }
