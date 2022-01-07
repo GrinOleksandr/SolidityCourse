@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+
+    <title>-=Sasha MetaTx demo=-</title>
+  </head>
+
+  <body>
+    <div id="header">
+      <h1>-=Sasha MetaTx demo=-</h1>
+      <button id="enableEthereumButton">Connect wallet</button>
+    </div>
+    <div id="generateTxDivsWrapper">
+      <div id="buyTokensForDaiDiv">
+        <h3>Generate `BuyTokensForDAI` MetaTx</h3>
+        <input id="metaTxAmountToBuy" placeholder="amountToBuy" />
+        <button type="button" id="genDaiMetaTxButton">Generate</button>
+      </div>
+      <div id="buyTokensForEthDiv">
+        <h3>Generate `BuyTokensForETH` MetaTx</h3>
+        <input id="metaTxValue" placeholder="ETH value" />
+        <button type="button" id="genEthMetaTxButton">Generate</button>
+      </div>
+    </div>
+    <div id="typedDataWrapper">
+      <div>
+        <h3>Sign Typed Data</h3>
+        <p class="inputSpan">input:</p>
+        <div>
+          <span> from<input id="metaTxFrom" value="0x" /> </span>
+        </div>
+        <div>
+          <span> gas<input id="metaTxGas" value="0" /> </span>
+        </div>
+        <div>
+          <span> nonce<input id="metaTxNonce" value="0" /> </span>
+        </div>
+        <div>
+          <span> data<input id="metaTxData" value="0x" /> </span>
+        </div>
+        <p class="outputSpan">output:</p>
+        <div>
+          <span> signature<input id="metaTxSignature" value="" /> </span>
+        </div>
+        <div id="signedDataButtonsWrapper">
+          <button type="button" id="signTypedDataButton">Sign Typed Data</button>
+          <button type="button" id="executeMetaTxButton">Execute metaTx</button>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <p style="font-weight: bold">
+          Target contract address(kovan):
+          <span style="display: block; padding: 0 5px" id="vendorContractAddress"></span>
+        </p>
+      </div>
+    </div>
+  </body>
+
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/web3/3.0.0-rc.5/web3.min.js"
+    integrity="sha512-jRzb6jM5wynT5UHyMW2+SD+yLsYPEU5uftImpzOcVTdu1J7VsynVmiuFTsitsoL5PJVQi+OtWbrpWq/I+kkF4Q=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  ></script>
+
+  <script>
+    var ethereum;
+    if (typeof window.ethereum !== 'undefined') {
+      console.log('MetaMask is installed!');
+      ethereum = window.ethereum;
+    }
+
+    const vendorAddress = '0xC6dC5F4e0B037d4dAa24130b428A7f3353e1Ae27';
+    const minimalForwarderAddr = vendorAddress;
+
+    window.document.getElementById('vendorContractAddress').textContent = vendorAddress;
+
+    const ethereumButton = window.document.getElementById('enableEthereumButton');
+    const genDaiMetaTxButton = window.document.getElementById('genDaiMetaTxButton');
+    const genEthMetaTxButton = window.document.getElementById('genEthMetaTxButton');
+    const signTypedButton = window.document.getElementById('signTypedDataButton');
+    const executeMetaTxButton = window.document.getElementById('executeMetaTxButton');
+
+    var accounts;
+    ethereumButton.addEventListener('click', () => {
+      event.preventDefault();
+      //Will Start the metamask extension
+      accounts = ethereum
+        .request({
+          method: 'eth_requestAccounts',
+        })
+        .then(() => {
+          console.log('chainId: ', ethereum.chainId);
+          if (ethereum.chainId != '0x42') {
+            //0x42 for Kovan, 0x4 for Rinkeby!
+            ethereum.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId: '0x42' }],
+            });
+          }
+        });
+    });
+
+    genDaiMetaTxButton.addEventListener('click', async (event) => {
+      event.preventDefault();
+
+      const amountToBuy = window.document.getElementById('metaTxAmountToBuy').value
+        ? window.document.getElementById('metaTxAmountToBuy').value
+        : 0;
+      const req = await genBuyTokensForDaiMetaTx(minimalForwarderAddr, vendorAddress, amountToBuy);
+      window.document.getElementById('metaTxFrom').value = req.from;
+      window.document.getElementById('metaTxAmountToBuy').value = req.amountToBuy;
+      window.document.getElementById('metaTxValue').value = req.value;
+      window.document.getElementById('metaTxGas').value = req.gas;
+      window.document.getElementById('metaTxNonce').value = req.nonce;
+      window.document.getElementById('metaTxData').value = req.data;
+    });
+
+    genEthMetaTxButton.addEventListener('click', async (event) => {
+      event.preventDefault();
+
+      const value = window.document.getElementById('metaTxValue').value
+        ? window.document.getElementById('metaTxValue').value
+        : 0;
+      const req = await genBuyTokensForEthMetaTx(minimalForwarderAddr, vendorAddress, value);
+      window.document.getElementById('metaTxFrom').value = req.from;
+      window.document.getElementById('metaTxValue').value = req.value;
+      window.document.getElementById('metaTxGas').value = req.gas;
+      window.document.getElementById('metaTxNonce').value = req.nonce;
+      window.document.getElementById('metaTxData').value = req.data;
+    });
+
+    signTypedButton.addEventListener('click', (event) => {
+      event.preventDefault();
+      req = getReqFromForm();
+      signMetaTx(req);
+    });
+
+    executeMetaTxButton.addEventListener('click', async (event) => {
+      event.preventDefault();
+      const req = getReqFromForm();
+      console.log('scv_req', req);
+      const signature = window.document.getElementById('metaTxSignature').value;
+      const verification = await verifyMetaTx(minimalForwarderAddr, req, signature);
+      if (verification !== true) {
+        alert(`meta transaction is invalid!! ${verification}`);
+        return;
+      }
+
+      await executeMetaTx(minimalForwarderAddr, req, signature);
+    });
+  </script>
+
+  <script type="text/javascript">
+    const vendorAbi = [
+      { inputs: [], stateMutability: 'nonpayable', type: 'constructor' },
+      {
+        anonymous: false,
+        inputs: [
+          { indexed: false, internalType: 'address', name: 'previousAdmin', type: 'address' },
+          { indexed: false, internalType: 'address', name: 'newAdmin', type: 'address' },
+        ],
+        name: 'AdminChanged',
+        type: 'event',
+      },
+      {
+        anonymous: false,
+        inputs: [{ indexed: true, internalType: 'address', name: 'beacon', type: 'address' }],
+        name: 'BeaconUpgraded',
+        type: 'event',
+      },
+      {
+        anonymous: false,
+        inputs: [{ indexed: true, internalType: 'bytes32', name: 'id', type: 'bytes32' }],
+        name: 'ChainlinkCancelled',
+        type: 'event',
+      },
+      {
+        anonymous: false,
+        inputs: [{ indexed: true, internalType: 'bytes32', name: 'id', type: 'bytes32' }],
+        name: 'ChainlinkFulfilled',
+        type: 'event',
+      },
+      {
+        anonymous: false,
+        inputs: [{ indexed: true, internalType: 'bytes32', name: 'id', type: 'bytes32' }],
+        name: 'ChainlinkRequested',
+        type: 'event',
+      },
+      {
+        anonymous: false,
+        inputs: [{ indexed: false, internalType: 'string', name: 'message', type: 'string' }],
+        name: 'Log',
+        type: 'event',
+      },
+      {
+        anonymous: false,
+        inputs: [{ indexed: false, internalType: 'bytes', name: 'message', type: 'bytes' }],
+        name: 'LogBytes',
+        type: 'event',
+      },
+      {
+        anonymous: false,
+        inputs: [{ indexed: false, internalType: 'uint256', name: 'number', type: 'uint256' }],
+        name: 'MyTokensTransfered',
+        type: 'event',
+      },
+      {
+        anonymous: false,
+        inputs: [
+          { indexed: true, internalType: 'address', name: 'previousOwner', type: 'address' },
+          { indexed: true, internalType: 'address', name: 'newOwner', type: 'address' },
+        ],
+        name: 'OwnershipTransferred',
+        type: 'event',
+      },
+      {
+        anonymous: false,
+        inputs: [{ indexed: false, internalType: 'uint256', name: 'price', type: 'uint256' }],
+        name: 'PriceUpdated',
+        type: 'event',
+      },
+      {
+        anonymous: false,
+        inputs: [{ indexed: false, internalType: 'uint256', name: 'number', type: 'uint256' }],
+        name: 'RandomNumberUpdated',
+        type: 'event',
+      },
+      {
+        anonymous: false,
+        inputs: [
+          { indexed: false, internalType: 'address', name: 'buyer', type: 'address' },
+          { indexed: false, internalType: 'uint256', name: 'amount', type: 'uint256' },
+        ],
+        name: 'TokensBought',
+        type: 'event',
+      },
+      {
+        anonymous: false,
+        inputs: [{ indexed: true, internalType: 'address', name: 'implementation', type: 'address' }],
+        name: 'Upgraded',
+        type: 'event',
+      },
+      {
+        inputs: [{ internalType: 'address', name: '', type: 'address' }],
+        name: '_nonces',
+        outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+        stateMutability: 'view',
+        type: 'function',
+      },
+      { inputs: [], name: 'buyTokens', outputs: [], stateMutability: 'payable', type: 'function' },
+      {
+        inputs: [{ internalType: 'uint256', name: 'amountToBuy', type: 'uint256' }],
+        name: 'buyTokensForDAI',
+        outputs: [],
+        stateMutability: 'nonpayable',
+        type: 'function',
+      },
+      {
+        inputs: [{ internalType: 'uint256', name: 'amountToBuy', type: 'uint256' }],
+        name: 'buyTokensForDAIOnBehalfOf',
+        outputs: [],
+        stateMutability: 'nonpayable',
+        type: 'function',
+      },
+      { inputs: [], name: 'buyTokensOnBehalfOf', outputs: [], stateMutability: 'payable', type: 'function' },
+      {
+        inputs: [
+          {
+            components: [
+              { internalType: 'address', name: 'from', type: 'address' },
+              { internalType: 'uint256', name: 'value', type: 'uint256' },
+              { internalType: 'uint256', name: 'gas', type: 'uint256' },
+              { internalType: 'uint256', name: 'nonce', type: 'uint256' },
+              { internalType: 'bytes', name: 'data', type: 'bytes' },
+            ],
+            internalType: 'struct MinimalForwarder.ForwardRequest',
+            name: 'req',
+            type: 'tuple',
+          },
+          { internalType: 'bytes', name: 'signature', type: 'bytes' },
+        ],
+        name: 'execute',
+        outputs: [
+          { internalType: 'bool', name: '', type: 'bool' },
+          { internalType: 'bytes', name: '', type: 'bytes' },
+        ],
+        stateMutability: 'payable',
+        type: 'function',
+      },
+      {
+        inputs: [
+          { internalType: 'bytes32', name: '_requestId', type: 'bytes32' },
+          { internalType: 'uint256', name: '_eth_usd_price', type: 'uint256' },
+        ],
+        name: 'fulfill',
+        outputs: [],
+        stateMutability: 'nonpayable',
+        type: 'function',
+      },
+      {
+        inputs: [{ internalType: 'address', name: 'from', type: 'address' }],
+        name: 'getNonce',
+        outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+        stateMutability: 'view',
+        type: 'function',
+      },
+      {
+        inputs: [],
+        name: 'getRandomNumber',
+        outputs: [{ internalType: 'bytes32', name: 'requestId', type: 'bytes32' }],
+        stateMutability: 'nonpayable',
+        type: 'function',
+      },
+      {
+        inputs: [
+          { internalType: 'address', name: 'tokenContractAddress', type: 'address' },
+          { internalType: 'address', name: '_DAITokenContractAddress', type: 'address' },
+        ],
+        name: 'initialize',
+        outputs: [],
+        stateMutability: 'nonpayable',
+        type: 'function',
+      },
+      {
+        inputs: [{ internalType: 'address', name: 'forwarder', type: 'address' }],
+        name: 'isTrustedForwarder',
+        outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
+        stateMutability: 'view',
+        type: 'function',
+      },
+      {
+        inputs: [],
+        name: 'owner',
+        outputs: [{ internalType: 'address', name: '', type: 'address' }],
+        stateMutability: 'view',
+        type: 'function',
+      },
+      {
+        inputs: [
+          { internalType: 'bytes32', name: 'requestId', type: 'bytes32' },
+          { internalType: 'uint256', name: 'randomness', type: 'uint256' },
+        ],
+        name: 'rawFulfillRandomness',
+        outputs: [],
+        stateMutability: 'nonpayable',
+        type: 'function',
+      },
+      { inputs: [], name: 'renounceOwnership', outputs: [], stateMutability: 'nonpayable', type: 'function' },
+      {
+        inputs: [],
+        name: 'request_ETH_USD_price',
+        outputs: [{ internalType: 'bytes32', name: 'requestId', type: 'bytes32' }],
+        stateMutability: 'nonpayable',
+        type: 'function',
+      },
+      {
+        inputs: [{ internalType: 'address', name: 'newOwner', type: 'address' }],
+        name: 'transferOwnership',
+        outputs: [],
+        stateMutability: 'nonpayable',
+        type: 'function',
+      },
+      {
+        inputs: [],
+        name: 'trustedForwarder',
+        outputs: [{ internalType: 'address', name: '', type: 'address' }],
+        stateMutability: 'view',
+        type: 'function',
+      },
+      {
+        inputs: [{ internalType: 'address', name: 'newImplementation', type: 'address' }],
+        name: 'upgradeTo',
+        outputs: [],
+        stateMutability: 'nonpayable',
+        type: 'function',
+      },
+      {
+        inputs: [
+          { internalType: 'address', name: 'newImplementation', type: 'address' },
+          { internalType: 'bytes', name: 'data', type: 'bytes' },
+        ],
+        name: 'upgradeToAndCall',
+        outputs: [],
+        stateMutability: 'payable',
+        type: 'function',
+      },
+      {
+        inputs: [
+          {
+            components: [
+              { internalType: 'address', name: 'from', type: 'address' },
+              { internalType: 'uint256', name: 'value', type: 'uint256' },
+              { internalType: 'uint256', name: 'gas', type: 'uint256' },
+              { internalType: 'uint256', name: 'nonce', type: 'uint256' },
+              { internalType: 'bytes', name: 'data', type: 'bytes' },
+            ],
+            internalType: 'struct MinimalForwarder.ForwardRequest',
+            name: 'req',
+            type: 'tuple',
+          },
+          { internalType: 'bytes', name: 'signature', type: 'bytes' },
+        ],
+        name: 'verify',
+        outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
+        stateMutability: 'nonpayable',
+        type: 'function',
+      },
+      {
+        inputs: [],
+        name: 'versionRecipient',
+        outputs: [{ internalType: 'string', name: '', type: 'string' }],
+        stateMutability: 'view',
+        type: 'function',
+      },
+    ];
+
+    const genBuyTokensForDaiMetaTx = async (minimalForwarderAddr, vendorAddress, amountToBuy) => {
+      var web3 = new Web3(ethereum);
+      const bn1e18 = web3.utils.toBN(1e18);
+
+      var vendorContract = new web3.eth.Contract(vendorAbi, vendorAddress);
+      const from = ethereum.selectedAddress;
+      const callData = vendorContract.methods
+        .buyTokensForDAIOnBehalfOf(web3.utils.toBN(amountToBuy).mul(bn1e18))
+        .encodeABI();
+      // const gas = await vendorContract.methods.buyTokensForDAIOnBehalfOf(web3.utils.toBN(amountToBuy).mul(bn1e18)).estimateGas({from: from})
+
+      return {
+        from,
+        amountToBuy,
+        value: '0',
+        gas: 10000000,
+        nonce: await getMetaTxNonce(minimalForwarderAddr),
+        data: callData,
+      };
+    };
+
+    const genBuyTokensForEthMetaTx = async (minimalForwarderAddr, vendorAddress, value) => {
+      var web3 = new Web3(ethereum);
+      const bn1e18 = web3.utils.toBN(1e18);
+      value = value * 10**18
+
+      var vendorContract = new web3.eth.Contract(vendorAbi, vendorAddress);
+      const from = ethereum.selectedAddress;
+      const callData = vendorContract.methods.buyTokensOnBehalfOf().encodeABI();
+      // const gas = await vendorContract.methods.buyTokensForDAIOnBehalfOf(web3.utils.toBN(amountToBuy).mul(bn1e18)).estimateGas({from: from})
+
+      return {
+        from,
+        value,
+        gas: 10000000,
+        nonce: await getMetaTxNonce(minimalForwarderAddr),
+        data: callData,
+      };
+    };
+
+    const getMetaTxNonce = async (minimalForwarderAddr) => {
+      var web3 = new Web3(ethereum);
+
+      var metaTxContract = new web3.eth.Contract(vendorAbi, minimalForwarderAddr);
+      return await metaTxContract.methods.getNonce(ethereum.selectedAddress).call();
+    };
+
+    const signMetaTx = async (req) => {
+      const msgParams = JSON.stringify({
+        domain: {
+          // Defining the chain aka Rinkeby testnet or Ethereum Main Net
+          chainId: ethereum.chainId,
+          // Give a user friendly name to the specific contract you are signing for.
+          name: 'MinimalForwarder',
+          // If name isn't enough add verifying contract to make sure you are establishing contracts with the proper entity
+          verifyingContract: minimalForwarderAddr,
+          // Just let's you know the latest version. Definitely make sure the field name is correct.
+          version: '0.0.1',
+        },
+
+        // Defining the message signing data content.
+        message: req,
+        // Refers to the keys of the *types* object below.
+        primaryType: 'ForwardRequest',
+        types: {
+          // TODO: Clarify if EIP712Domain refers to the domain the contract is hosted on
+          EIP712Domain: [
+            {
+              name: 'name',
+              type: 'string',
+            },
+            {
+              name: 'version',
+              type: 'string',
+            },
+            {
+              name: 'chainId',
+              type: 'uint256',
+            },
+            {
+              name: 'verifyingContract',
+              type: 'address',
+            },
+          ],
+          // Refer to PrimaryType
+          ForwardRequest: [
+            {
+              name: 'from',
+              type: 'address',
+            },
+            // {
+            //   name: 'to',
+            //   type: 'address'
+            // },
+            {
+              name: 'value',
+              type: 'uint256',
+            },
+            {
+              name: 'gas',
+              type: 'uint256',
+            },
+            {
+              name: 'nonce',
+              type: 'uint256',
+            },
+            {
+              name: 'data',
+              type: 'bytes',
+            },
+          ],
+        },
+      });
+
+      var from = ethereum.selectedAddress;
+
+      var params = [from, msgParams];
+      var method = 'eth_signTypedData_v4';
+
+      const signature = await ethereum.request({
+        method,
+        params,
+        from,
+      });
+
+      window.document.getElementById('metaTxSignature').value = signature;
+      return signature;
+    };
+
+    const verifyMetaTx = async (minimalForwarderAddr, req, signature) => {
+      var web3 = new Web3(ethereum);
+
+      var metaTxContract = new web3.eth.Contract(vendorAbi, minimalForwarderAddr);
+      return await metaTxContract.methods.verify(req, signature).call();
+    };
+
+    const executeMetaTx = async (minimalForwarderAddr, req, signature) => {
+      var web3 = new Web3(ethereum);
+
+      var metaTxContract = new web3.eth.Contract(vendorAbi, minimalForwarderAddr);
+
+      const options = {
+        from: ethereum.selectedAddress,
+        gas: 600000
+      };
+
+      if(req.value && req.value > 0){
+        options.value = req.value;
+      }
+
+
+      return await metaTxContract.methods.execute(req, signature).send(options);
+    };
+
+    const getReqFromForm = () => {
+      return {
+        from: window.document.getElementById('metaTxFrom').value,
+        value: window.document.getElementById('metaTxValue').value,
+        gas: window.document.getElementById('metaTxGas').value,
+        nonce: window.document.getElementById('metaTxNonce').value,
+        data: window.document.getElementById('metaTxData').value,
+      };
+    };
+  </script>
+</html>

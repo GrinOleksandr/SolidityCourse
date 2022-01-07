@@ -1,0 +1,79 @@
+#header {
+    width:800px;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-content: flex-end;
+    justify-content: space-around;
+    align-items: center;
+}
+
+#enableEthereumButton {
+    margin:20px 10px;
+}
+
+#generateTxDivsWrapper {
+    display:flex;
+    width:800px;
+}
+
+#buyTokensForDaiDiv, #buyTokensForEthDiv {
+    width:400px;
+    border: 1px solid black;
+    padding: 10px;
+    text-align:center;
+}
+
+#typedDataWrapper {
+    width:800px;
+    display:flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 10px 0;
+}
+
+#typedDataWrapper > div {
+    border: 1px solid black;
+    padding:20px;
+}
+
+.inputSpan, .outputSpan {
+    font-weight:bold;
+    margin:0;
+    text-align: center;
+}
+
+.inputSpan {
+    padding-bottom:5px;
+}
+
+.outputSpan {
+    padding-top:20px;
+    padding-bottom:2px;
+}
+
+#typedDataWrapper > div > h3 {
+    text-align: center;
+}
+
+#typedDataWrapper input {
+    float:right;
+}
+
+#typedDataWrapper span {
+    display:block;
+    float:right;
+    text-align:left;
+}
+
+#signedDataButtonsWrapper {
+    padding: 15px 0 0 0;
+    height: 50px;
+    width: 200px;
+    display: flex;
+    float: right;
+    align-items: center;
+    justify-content: space-around;
+    flex-direction: column;
+    align-content: flex-start;
+}
