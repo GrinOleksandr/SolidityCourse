@@ -259,7 +259,6 @@ contract Vendor is Initializable, OwnableUpgradeable, UUPSUpgradeable, Chainlink
             if(request.randomNumber == 0){
                 return;
             }
-            emit Log('buy_for_dai_1');
             return _buyTokensForDAI(request.sender, request.randomNumber, request.amount);
         }
     }

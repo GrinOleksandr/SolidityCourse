@@ -5,70 +5,85 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hello MetaTx demo</title>
+    <link rel="stylesheet" href="style.css">
+
+    <title>-=Sasha MetaTx demo=-</title>
 </head>
 
 <body>
-<div>
-    <h1>Hello MetaTx demo</h1>
-    <button id="enableEthereumButton">Enable Ethereum</button>
+<div id="header">
+    <h1>-=Sasha MetaTx demo=-</h1>
+    <button id="enableEthereumButton">Connect wallet</button>
 </div>
-<div>
-    <h3>Sign Data</h3>
-    <button type="button" id="signDataButton">Sign Data</button>
-    <input id="signData" value="hello" />
+<!--<div>-->
+<!--    <h3>Sign Data</h3>-->
+<!--    <button type="button" id="signDataButton">Sign Data</button>-->
+<!--    <input id="signData" value="hello" />-->
+<!--</div>-->
+<div id="generateTxDivsWrapper">
+    <div id="buyTokensForDaiDiv">
+        <h3>Generate `BuyTokensForDAI` MetaTx</h3>
+        <input id="metaTxAmountToBuy" placeholder="amountToBuy"/>
+        <button type="button" id="genDaiMetaTxButton">Generate</button>
+    </div>
+    <div id="buyTokensForEthDiv">
+        <h3>Generate `BuyTokensForDAI` MetaTx</h3>
+        <input id="metaTxValue" placeholder="ETH value"/>
+        <button type="button" id="genEthMetaTxButton">Generate</button>
+    </div>
 </div>
-<div>
-    <h3>Generage `SafeMint` Metatransaction</h3>
-    <button type="button" id="genMintMetaTxButton">Generate SafeMint MetaTx</button>
-</div>
-<div>
-    <h3>Sign Typed Data</h3>
-    input:
+<div id="typedDataWrapper">
     <div>
+        <h3>Sign Typed Data</h3>
+        <p class="inputSpan">input:</p>
+        <div>
       <span>
         from<input id="metaTxFrom" value="0x" />
       </span>
-    </div>
-<!--    <div>-->
-<!--      <span>-->
-<!--        to<input id="metaTxTo" value="0x" />-->
-<!--      </span>-->
-<!--    </div>-->
-    <div>
-      <span>
-        value<input id="metaTxValue" value="0" />
-      </span>
-    </div>
-    <div>
-      <span>
-        Amount of tokens to buy<input id="metaTxAmountToBuy" value="0x" /> (for BuyTokensForDAI only!!!)
-      </span>
-    </div>
-    <div>
+        </div>
+        <!--    <div>-->
+        <!--      <span>-->
+        <!--        to<input id="metaTxTo" value="0x" />-->
+        <!--      </span>-->
+        <!--    </div>-->
+        <!--    <div>-->
+        <!--      <span>-->
+        <!--        value<input id="metaTxValue" value="0" />-->
+        <!--      </span>-->
+        <!--    </div>-->
+        <!--    <div>-->
+        <!--      <span>-->
+        <!--        Amount of tokens to buy<input id="metaTxAmountToBuy" value="0x" /> (for BuyTokensForDAI only!!!)-->
+        <!--      </span>-->
+        <!--    </div>-->
+        <div>
       <span>
         gas<input id="metaTxGas" value="0" />
       </span>
-    </div>
-    <div>
+        </div>
+        <div>
       <span>
         nonce<input id="metaTxNonce" value="0" />
       </span>
-    </div>
-    <div>
+        </div>
+        <div>
       <span>
         data<input id="metaTxData" value="0x" />
       </span>
-    </div>
-    output:
-    <div>
+        </div>
+        <p class="outputSpan">output:</p>
+        <div>
       <span>
         signature<input id="metaTxSignature" value="" />
       </span>
+        </div>
+        <div id="signedDataButtonsWrapper">
+            <button type="button" id="signTypedDataButton">Sign Typed Data</button>
+            <button type="button" id="executeMetaTxButton">Execute metaTx</button>
+        </div>
     </div>
-    <button type="button" id="signTypedDataButton">Sign Typed Data</button>
-    <button type="button" id="executeMetaTxButton">Execute metaTx</button>
 </div>
+
 
 </body>
 
@@ -404,31 +419,6 @@
         params,
         from,
       })
-    console.log('scv_signature', signature)
-    ///////////////////////////////////
-    // var sigUtil = require('eth-sig-util')
-    //
-    // const recovered = sigUtil.recoverTypedSignature_v4({
-    //   data: JSON.parse(msgParams),
-    //   sig: signature.result,
-    // });
-    //
-    // if (
-    //         ethereum.toChecksumAddress(recovered) === ethereum.toChecksumAddress(from)
-    // ) {
-    //   alert('Successfully recovered signer as ' + from);
-    // } else {
-    //   alert(
-    //           'Failed to verify signer when comparing ' + result + ' to ' + from
-    //   );
-    // }
-
-
-
-
-    //////////////////////////////////
-
-
 
     window.document.getElementById('metaTxSignature').value = signature
     return signature
@@ -442,7 +432,6 @@
   }
 
   const executeMetaTx = async (minimalForwarderAddr, req, signature) => {
-    console.log('scv_executing')
     var web3 = new Web3(ethereum)
 
     var metaTxContract = new web3.eth.Contract(MetaTxABI, minimalForwarderAddr)
