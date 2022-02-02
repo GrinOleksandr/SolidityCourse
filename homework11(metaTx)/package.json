@@ -11,7 +11,8 @@
     "verify-kovan": "truffle run verify Vendor ERC1967Proxy --network kovan",
     "test": "npx hardhat test ./test/Vendor.test.ts",
     "coverage": "npx hardhat coverage",
-    "lint:sol": "solhint --fix -c .solhint.json /contracts/**/*.sol "
+    "lint:sol": "solhint './contracts/**/*.sol'",
+    "prettier:solidity": "prettier --write contracts/**/*.sol"
   },
   "author": "",
   "license": "ISC",
@@ -34,6 +35,7 @@
     "mocha": "^8.1.2",
     "pify": "^2.3.0",
     "prettier": "^2.5.1",
+    "prettier-plugin-solidity": "^1.0.0-beta.19",
     "solhint": "^3.3.6",
     "solidity-coverage": "^0.7.17",
     "truffle": "^5.4.21",
