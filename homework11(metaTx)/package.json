@@ -10,7 +10,8 @@
     "migrate-kovan": "truffle migrate --network kovan --reset --compile-all -f 2 --to 2",
     "verify-kovan": "truffle run verify Vendor ERC1967Proxy --network kovan",
     "test": "npx hardhat test ./test/Vendor.test.ts",
-    "coverage": "npx hardhat coverage"
+    "coverage": "npx hardhat coverage",
+    "lint:sol": "solhint --fix -c .solhint.json /contracts/**/*.sol "
   },
   "author": "",
   "license": "ISC",
