@@ -1,4 +1,4 @@
-#### **My homeworks for Etherium Solidity course from Sigma Software Academy**
+#### **My homeworks for Ethereum Solidity course from Sigma Software Academy**
 
 1) Send 1 ETH to mentors wallet on Rinkeby network
 
